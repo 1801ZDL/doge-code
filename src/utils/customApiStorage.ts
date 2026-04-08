@@ -11,6 +11,28 @@ export type CustomApiStorageData = {
   apiKey?: string
   model?: string
   savedModels?: string[]
+  /**
+   * Map of model name to its specific API endpoint configuration.
+   * When set, the API call will use this model's specific config instead of the default customApiEndpoint.
+   * This enables routing different models to different backends (e.g., local sglang vs cloud API).
+   */
+  modelEndpointMap?: Record<string, {
+    provider?: CustomApiProvider
+    baseURL?: string
+    apiKey?: string
+  }>
+}
+
+/**
+ * Get the endpoint configuration for a specific model.
+ * Returns the model-specific config if exists, otherwise returns undefined.
+ */
+export function getModelEndpointConfig(modelName: string): { provider?: CustomApiProvider; baseURL?: string; apiKey?: string } | undefined {
+  const storage = readCustomApiStorage()
+  if (storage.modelEndpointMap && modelName in storage.modelEndpointMap) {
+    return storage.modelEndpointMap[modelName]
+  }
+  return undefined
 }
 
 const CUSTOM_API_STORAGE_KEY = 'customApiEndpoint'
@@ -35,6 +57,22 @@ export function readCustomApiStorage(): CustomApiStorageData {
         ? 'chat_completions'
         : undefined
 
+  // Parse modelEndpointMap
+  const modelEndpointMap: CustomApiStorageData['modelEndpointMap'] = {}
+  if (value.modelEndpointMap && typeof value.modelEndpointMap === 'object') {
+    const map = value.modelEndpointMap as Record<string, unknown>
+    for (const [key, config] of Object.entries(map)) {
+      if (config && typeof config === 'object') {
+        const cfg = config as Record<string, unknown>
+        modelEndpointMap[key] = {
+          provider: cfg.provider as CustomApiProvider | undefined,
+          baseURL: typeof cfg.baseURL === 'string' ? cfg.baseURL : undefined,
+          apiKey: typeof cfg.apiKey === 'string' ? cfg.apiKey : undefined,
+        }
+      }
+    }
+  }
+
   return {
     provider,
     openaiCompatMode,
@@ -44,6 +82,7 @@ export function readCustomApiStorage(): CustomApiStorageData {
     savedModels: Array.isArray(value.savedModels)
       ? value.savedModels.filter((item): item is string => typeof item === 'string')
       : [],
+    modelEndpointMap: Object.keys(modelEndpointMap).length > 0 ? modelEndpointMap : undefined,
   }
 }
 

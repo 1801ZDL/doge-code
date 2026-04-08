@@ -273,7 +273,7 @@ export async function createOpenAICompatStream(
   signal?: AbortSignal,
 ): Promise<ReadableStreamDefaultReader<Uint8Array>> {
   const response = await (config.fetch ?? globalThis.fetch)(
-    joinBaseUrl(config.baseURL, '/chat/completions'),
+    joinBaseUrl(config.baseURL, '/v1/chat/completions'),
     {
       method: 'POST',
       signal,

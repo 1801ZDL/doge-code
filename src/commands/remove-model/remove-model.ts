@@ -33,11 +33,17 @@ export const call: LocalCommandCall = async (args, _context) => {
       savedModels: remainingModels,
     },
   }))
+
+  // Clean up modelEndpointMap when removing model
   const secureStored = readCustomApiStorage()
+  const existingMap = secureStored.modelEndpointMap ?? {}
+  const { [targetModel]: _, ...remainingEndpointMap } = existingMap
+
   writeCustomApiStorage({
     ...secureStored,
     model: nextCurrentModel,
-    savedModels: remainingModels
+    savedModels: remainingModels,
+    modelEndpointMap: Object.keys(remainingEndpointMap).length > 0 ? remainingEndpointMap : undefined,
   })
 
   if (currentModel === targetModel) {

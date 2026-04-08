@@ -315,6 +315,16 @@ export async function getAnthropicClient({
     ...(isDebugToStdErr() && { logger: createStderrLogger() }),
   }
 
+  // For anthropic provider with custom baseURL (e.g., sglang with anthropic format),
+  // use the baseURL from customApiStorage or ANTHROPIC_BASE_URL env var
+  if (customApiProvider === 'anthropic' && !isEnvTruthy(process.env.USE_STAGING_OAUTH)) {
+    const customApiStorage = readCustomApiStorage()
+    const customBaseURL = customApiStorage.baseURL || process.env.ANTHROPIC_BASE_URL
+    if (customBaseURL) {
+      clientConfig.baseURL = customBaseURL
+    }
+  }
+
   if (customApiProvider === 'openai') {
     ;(clientConfig as ConstructorParameters<typeof Anthropic>[0] & {
       __openaiCompat?: boolean

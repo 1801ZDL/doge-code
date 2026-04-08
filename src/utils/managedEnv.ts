@@ -207,12 +207,31 @@ function applyPersistedCustomApiEndpointEnv(): void {
     ...readCustomApiStorage(),
   }
 
-  if (customApiEndpoint?.baseURL) {
-    process.env.ANTHROPIC_BASE_URL = customApiEndpoint.baseURL
+  // Get the current model being used
+  const currentModel = customApiEndpoint.model || process.env.ANTHROPIC_MODEL
+
+  // Check if the current model has a specific endpoint config
+  let endpointConfig = customApiEndpoint
+  if (currentModel && customApiEndpoint.modelEndpointMap && currentModel in customApiEndpoint.modelEndpointMap) {
+    const modelSpecific = customApiEndpoint.modelEndpointMap[currentModel]
+    if (modelSpecific) {
+      endpointConfig = {
+        ...customApiEndpoint,
+        ...modelSpecific,
+      }
+    }
   }
 
-  if (customApiEndpoint?.apiKey) {
-    process.env.DOGE_API_KEY = customApiEndpoint.apiKey
+  if (endpointConfig?.baseURL) {
+    process.env.ANTHROPIC_BASE_URL = endpointConfig.baseURL
+  }
+
+  if (endpointConfig?.apiKey) {
+    process.env.DOGE_API_KEY = endpointConfig.apiKey
+  }
+
+  if (endpointConfig?.provider) {
+    process.env.CLAUDE_CODE_COMPATIBLE_API_PROVIDER = endpointConfig.provider
   }
 
   if (customApiEndpoint?.model) {

@@ -203,15 +203,37 @@ export function ConsoleOAuthFlow({
     process.env.ANTHROPIC_BASE_URL = nextBaseURL;
     process.env.DOGE_API_KEY = nextApiKey;
     process.env.ANTHROPIC_MODEL = nextModel;
+
+    // Build the model-specific endpoint config for modelEndpointMap
+    const modelEndpointConfig: {
+      provider?: CustomApiProvider
+      baseURL?: string
+      apiKey?: string
+      openaiCompatMode?: OpenAICompatMode
+    } = {}
+    if (compatibleApiProvider) modelEndpointConfig.provider = compatibleApiProvider
+    if (nextBaseURL) modelEndpointConfig.baseURL = nextBaseURL
+    if (nextApiKey) modelEndpointConfig.apiKey = nextApiKey
+    if (compatibleApiProvider === 'openai') modelEndpointConfig.openaiCompatMode = openAICompatMode
+
+    // Preserve existing modelEndpointMap and add/update the current model's config
+    const existingModelEndpointMap = persistedCustomApiEndpoint.modelEndpointMap ?? {}
+    const newModelEndpointMap = {
+      ...existingModelEndpointMap,
+      ...(nextModel ? { [nextModel]: modelEndpointConfig } : {})
+    }
+
     saveGlobalConfig(current => ({
       ...current,
       customApiEndpoint: {
+        ...current.customApiEndpoint,
         provider: compatibleApiProvider,
         openaiCompatMode: compatibleApiProvider === 'openai' ? openAICompatMode : undefined,
         baseURL: nextBaseURL,
         apiKey: undefined,
         model: nextModel,
-        savedModels: nextSavedModels
+        savedModels: nextSavedModels,
+        modelEndpointMap: newModelEndpointMap
       },
       customApiKeyResponses: normalizedKey ? {
         approved: [...new Set([...(current.customApiKeyResponses?.approved ?? []), normalizedKey])],
@@ -224,9 +246,10 @@ export function ConsoleOAuthFlow({
       baseURL: nextBaseURL,
       apiKey: nextApiKey,
       model: nextModel,
-      savedModels: nextSavedModels
+      savedModels: nextSavedModels,
+      modelEndpointMap: newModelEndpointMap
     });
-  }, [compatibleApiProvider, customApiKey, customBaseURL, customModel, openAICompatMode, persistedCustomApiEndpoint.savedModels]);
+  }, [compatibleApiProvider, customApiKey, customBaseURL, customModel, openAICompatMode, persistedCustomApiEndpoint.savedModels, persistedCustomApiEndpoint.modelEndpointMap]);
   const handleSubmitCustomConfig = useCallback((value: string) => {
     if (safeOauthStatus.state !== 'custom_config') {
       return;

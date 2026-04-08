@@ -1821,10 +1821,23 @@ async function* queryModel(
         // BetaMessageStream calls partialParse() on every input_json_delta, which we don't need
         // since we handle tool input accumulation ourselves
         // biome-ignore lint/plugin: main conversation loop handles attribution separately
-        const customApiConfig = {
+        let customApiConfig = {
           ...(getGlobalConfig().customApiEndpoint ?? {}),
           ...readCustomApiStorage(),
         }
+
+        // Check if the current model has a specific endpoint config (multi-endpoint routing)
+        const currentModel = params.model
+        if (currentModel && customApiConfig.modelEndpointMap && currentModel in customApiConfig.modelEndpointMap) {
+          const modelSpecific = customApiConfig.modelEndpointMap[currentModel]
+          if (modelSpecific) {
+            customApiConfig = {
+              ...customApiConfig,
+              ...modelSpecific,
+            }
+          }
+        }
+
         const compatProvider = customApiConfig.provider ?? 'anthropic'
         const openAICompatMode = customApiConfig.openaiCompatMode ?? 'chat_completions'
         if (compatProvider === 'gemini') {
@@ -1846,14 +1859,14 @@ async function* queryModel(
           }
           const reader = await createGeminiCompatStream(
             {
-              apiKey: process.env.DOGE_API_KEY || '',
-              baseURL: process.env.ANTHROPIC_BASE_URL || '',
+              apiKey: customApiConfig.apiKey || process.env.DOGE_API_KEY || '',
+              baseURL: customApiConfig.baseURL || process.env.ANTHROPIC_BASE_URL || '',
               headers: clientRequestId
                 ? { [CLIENT_REQUEST_ID_HEADER]: clientRequestId }
                 : undefined,
               fetch: globalThis.fetch,
             },
-            process.env.ANTHROPIC_MODEL?.trim() || params.model,
+            customApiConfig.model?.trim() || process.env.ANTHROPIC_MODEL?.trim() || params.model,
             geminiRequest,
             signal,
           )
@@ -1865,8 +1878,8 @@ async function* queryModel(
         }
         if (compatProvider === 'openai') {
           const compatConfig = {
-            apiKey: process.env.DOGE_API_KEY || '',
-            baseURL: process.env.ANTHROPIC_BASE_URL || '',
+            apiKey: customApiConfig.apiKey || process.env.DOGE_API_KEY || '',
+            baseURL: customApiConfig.baseURL || process.env.ANTHROPIC_BASE_URL || '',
             headers: clientRequestId
               ? { [CLIENT_REQUEST_ID_HEADER]: clientRequestId }
               : undefined,
@@ -1875,7 +1888,7 @@ async function* queryModel(
 
           if (openAICompatMode === 'responses') {
             const responsesRequest = convertAnthropicRequestToOpenAIResponses({
-              model: params.model,
+              model: customApiConfig.model?.trim() || params.model,
               system: params.system,
               messages: params.messages,
               tools: params.tools,
@@ -1903,7 +1916,7 @@ async function* queryModel(
           }
 
           const openAIRequest = convertAnthropicRequestToOpenAI({
-            model: params.model,
+            model: customApiConfig.model?.trim() || params.model,
             system: params.system,
             messages: params.messages,
             tools: params.tools,
