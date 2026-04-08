@@ -313,6 +313,6 @@ bun run version
 
 
 ## 本地sglang模型接入说明
-第一次启动默认会进入/login，选择1.0
-输入https://127.0.0.1:8000,整体显示https://127.0.0.1:8000/v1/chat/completions
+第一次启动默认会进入/login，最新版SGLANG可以直接选择1.0 Anthropic格式的API请求
+输入https://127.0.0.1:8000（本地sglang服务端口）,模型名称自定义
 模型名称自定义
