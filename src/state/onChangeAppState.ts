@@ -99,6 +99,8 @@ export function onChangeAppState({
     // Remove from settings
     updateSettingsForSource('userSettings', { model: undefined })
     setMainLoopModelOverride(null)
+    // Re-apply environment variables for the new model
+    applyConfigEnvironmentVariables()
   }
 
   // mainLoopModel: add it to settings?
@@ -109,6 +111,8 @@ export function onChangeAppState({
     // Save to settings
     updateSettingsForSource('userSettings', { model: newState.mainLoopModel })
     setMainLoopModelOverride(newState.mainLoopModel)
+    // Re-apply environment variables for the new model
+    applyConfigEnvironmentVariables()
   }
 
   // expandedView → persist as showExpandedTodos + showSpinnerTree for backwards compat

@@ -14,6 +14,7 @@ import {
   getSettings_DEPRECATED,
   getSettingsForSource,
 } from './settings/settings.js'
+import { getMainLoopModel } from './model/model.js'
 
 /**
  * `claude ssh` remote: ANTHROPIC_UNIX_SOCKET routes auth through a -R forwarded
@@ -207,8 +208,9 @@ function applyPersistedCustomApiEndpointEnv(): void {
     ...readCustomApiStorage(),
   }
 
-  // Get the current model being used
-  const currentModel = customApiEndpoint.model || process.env.ANTHROPIC_MODEL
+  // Get the current model being used at runtime (from /model command or settings)
+  // This ensures model-specific endpoint configs are applied correctly
+  const currentModel = getMainLoopModel()
 
   // Check if the current model has a specific endpoint config
   let endpointConfig = customApiEndpoint
@@ -234,7 +236,7 @@ function applyPersistedCustomApiEndpointEnv(): void {
     process.env.CLAUDE_CODE_COMPATIBLE_API_PROVIDER = endpointConfig.provider
   }
 
-  if (customApiEndpoint?.model) {
-    process.env.ANTHROPIC_MODEL = customApiEndpoint.model
+  if (currentModel) {
+    process.env.ANTHROPIC_MODEL = currentModel
   }
 }

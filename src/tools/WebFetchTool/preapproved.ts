@@ -11,13 +11,51 @@
 // See test/utils/sandbox/webfetch-preapproved-separation.test.ts for verification
 // that sandbox network restrictions require explicit user permission rules.
 
+// [DOGE-CODE MODIFIED] - Added more domains for open-source AI ecosystem
 export const PREAPPROVED_HOSTS = new Set([
-  // Anthropic
+  // Anthropic (keeping for compatibility)
   'platform.claude.com',
   'code.claude.com',
   'modelcontextprotocol.io',
   'github.com/anthropics',
   'agentskills.io',
+
+  // Chinese AI Platforms - [DOGE-CODE ADDED]
+  'modelscope.cn',
+  'www.modelscope.cn',
+  'z.ai',
+  'www.z.ai',
+  'chatglm.cn',
+  'www.chatglm.cn',
+  'bigmodel.cn',
+  'www.bigmodel.cn',
+  'zhipuai.cn',
+  'www.zhipuai.cn',
+  'huggingface.co',
+  'www.huggingface.co',
+  'arxiv.org',
+  'www.arxiv.org',
+  'github.com',
+
+  // Unsloth & Open Source LLMs - [DOGE-CODE ADDED]
+  'unsloth.ai',
+  'www.unsloth.ai',
+  'ollama.com',
+  'www.ollama.com',
+  'lmstudio.ai',
+  'www.lmstudio.ai',
+  'groq.com',
+  'www.groq.com',
+  'openai.com',
+  'www.openai.com',
+  'anthropic.com',
+  'www.anthropic.com',
+
+  // Open Source AI Search - [DOGE-CODE ADDED]
+  'phind.com',
+  'www.phind.com',
+  'perplexity.ai',
+  'www.perplexity.ai',
 
   // Top Programming Languages
   'docs.python.org', // Python
