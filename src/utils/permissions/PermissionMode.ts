@@ -77,6 +77,13 @@ const PERMISSION_MODE_CONFIG: Partial<
     color: 'error',
     external: 'dontAsk',
   },
+  focus: {
+    title: 'Focus',
+    shortTitle: 'Focus',
+    symbol: '🎯',
+    color: 'autoAccept',
+    external: 'focus',
+  },
   ...(feature('TRANSCRIPT_CLASSIFIER')
     ? {
         auto: {

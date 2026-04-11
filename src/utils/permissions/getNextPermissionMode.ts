@@ -71,6 +71,18 @@ export function getNextPermissionMode(
       // Not exposed in UI cycle yet, but return default if somehow reached
       return 'default'
 
+    case 'focus':
+      // Focus cycles back to default; user can Shift+Tab to default and if needed
+      // invoke /focus on to re-enter. Ants can also cycle to bypassPermissions or auto.
+      if (process.env.USER_TYPE === 'ant') {
+        if (toolPermissionContext.isBypassPermissionsModeAvailable) {
+          return 'bypassPermissions'
+        }
+        if (canCycleToAuto(toolPermissionContext)) {
+          return 'auto'
+        }
+      }
+      return 'default'
 
     default:
       // Covers auto (when TRANSCRIPT_CLASSIFIER is enabled) and any future modes — always fall back to default

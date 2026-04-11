@@ -926,6 +926,27 @@ export const hasPermissionsToUseTool: CanUseToolFn = async (
       }
     }
 
+    // Focus mode: auto-approve non-dangerous commands, still prompt for dangerous ones
+    if (appState.toolPermissionContext.mode === 'focus') {
+      // Dangerous commands (explicit ask rules or safety checks) still prompt
+      if (
+        result.behavior === 'ask' &&
+        (result.decisionReason?.type === 'rule' ||
+          result.decisionReason?.type === 'safetyCheck')
+      ) {
+        return result
+      }
+      // Non-dangerous commands auto-approved
+      return {
+        behavior: 'allow',
+        updatedInput: input,
+        decisionReason: {
+          type: 'mode',
+          mode: 'focus',
+        },
+      }
+    }
+
     // When permission prompts should be avoided (e.g., background/headless agents),
     // run PermissionRequest hooks first to give them a chance to allow/deny.
     // Only auto-deny if no hook provides a decision.
