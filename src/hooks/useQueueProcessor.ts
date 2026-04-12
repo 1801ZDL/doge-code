@@ -4,7 +4,9 @@ import {
   getCommandQueueSnapshot,
   subscribeToCommandQueue,
 } from '../utils/messageQueueManager.js'
+import { popPersistentQueue } from '../utils/persistentQueue.js'
 import type { QueryGuard } from '../utils/QueryGuard.js'
+import { enqueue } from '../utils/messageQueueManager.js'
 import { processQueueIfReady } from '../utils/queueProcessor.js'
 
 type UseQueueProcessorParams = {
@@ -24,6 +26,9 @@ type UseQueueProcessorParams = {
  * - No query active (queryGuard — reactive via useSyncExternalStore)
  * - Queue has items
  * - No active local JSX UI blocking input
+ *
+ * Additionally, when the command queue is empty and the persistent queue has
+ * tasks, the next task is automatically enqueued for sequential execution.
  */
 export function useQueueProcessor({
   executeQueuedInput,
@@ -48,6 +53,18 @@ export function useQueueProcessor({
   useEffect(() => {
     if (isQueryActive) return
     if (hasActiveLocalJsxUI) return
+
+    // When command queue is empty, check persistent queue and enqueue next task.
+    // This enables sequential execution of queued tasks across turns.
+    if (queueSnapshot.length === 0) {
+      const nextTask = popPersistentQueue()
+      if (nextTask) {
+        enqueue({ value: nextTask, mode: 'prompt', priority: 'next' })
+        // Fall through — the enqueue above triggers a snapshot change and
+        // this effect re-runs with queueSnapshot.length > 0.
+      }
+    }
+
     if (queueSnapshot.length === 0) return
 
     // Reservation is now owned by handlePromptSubmit (inside executeUserInput's
