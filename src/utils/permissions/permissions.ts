@@ -928,11 +928,13 @@ export const hasPermissionsToUseTool: CanUseToolFn = async (
 
     // Focus mode: auto-approve non-dangerous commands, still prompt for dangerous ones
     if (appState.toolPermissionContext.mode === 'focus') {
-      // Dangerous commands (explicit ask rules or safety checks) still prompt
+      // Dangerous commands (explicit ask rules, safety checks, or other dangerous
+      // operations like dangerous removal paths) still prompt
       if (
         result.behavior === 'ask' &&
         (result.decisionReason?.type === 'rule' ||
-          result.decisionReason?.type === 'safetyCheck')
+          result.decisionReason?.type === 'safetyCheck' ||
+          result.decisionReason?.type === 'other')
       ) {
         return result
       }
