@@ -120,7 +120,7 @@ export function getMemoryScopeDisplay(
     case 'user':
       return `User (${join(getMemoryBaseDir(), 'agent-memory')}/)`
     case 'project':
-      return 'Project (.doge/agent-memory/)'
+      return 'Project (.claude/agent-memory/)'
     case 'local':
       return `Local (${getLocalAgentMemoryDir('...')})`
     default:

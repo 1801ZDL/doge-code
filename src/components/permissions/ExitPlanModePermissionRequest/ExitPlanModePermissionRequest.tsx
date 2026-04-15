@@ -25,7 +25,7 @@ import { enqueuePendingNotification } from '../../../utils/messageQueueManager.j
 import { createUserMessage } from '../../../utils/messages.js';
 import { getMainLoopModel, getRuntimeMainLoopModel } from '../../../utils/model/model.js';
 import { createPromptRuleContent, isClassifierPermissionsEnabled, PROMPT_PREFIX } from '../../../utils/permissions/bashClassifier.js';
-import { type PermissionMode, toExternalPermissionMode } from '../../../utils/permissions/PermissionMode.js';
+import { type PermissionMode, toExternalPermissionMode, permissionModeSymbol } from '../../../utils/permissions/PermissionMode.js';
 import type { PermissionUpdate } from '../../../utils/permissions/PermissionUpdateSchema.js';
 import { isAutoModeGateEnabled, restoreDangerousPermissions, stripDangerousPermissionsForAutoMode } from '../../../utils/permissions/permissionSetup.js';
 import { getPewterLedgerVariant, isPlanModeInterviewPhaseEnabled } from '../../../utils/planModeV2.js';
@@ -47,7 +47,7 @@ import type { PastedContent } from '../../../utils/config.js';
 import type { ImageDimensions } from '../../../utils/imageResizer.js';
 import { maybeResizeAndDownsampleImageBlock } from '../../../utils/imageResizer.js';
 import { cacheImagePath, storeImage } from '../../../utils/imageStore.js';
-type ResponseValue = 'yes-bypass-permissions' | 'yes-accept-edits' | 'yes-accept-edits-keep-context' | 'yes-default-keep-context' | 'yes-resume-auto-mode' | 'yes-auto-clear-context' | 'ultraplan' | 'no';
+type ResponseValue = 'yes-bypass-permissions' | 'yes-accept-edits' | 'yes-accept-edits-keep-context' | 'yes-default-keep-context' | 'yes-resume-auto-mode' | 'yes-auto-clear-context' | 'yes-focus-keep-context' | 'ultraplan' | 'no';
 
 /**
  * Build permission updates for plan approval, including prompt-based rules if provided.
@@ -146,7 +146,8 @@ export function ExitPlanModePermissionRequest({
   const {
     mode,
     isAutoModeAvailable,
-    isBypassPermissionsModeAvailable
+    isBypassPermissionsModeAvailable,
+    prePlanMode
   } = toolPermissionContext;
   const options = useMemo(() => buildPlanApprovalOptions({
     showClearContext,
@@ -154,8 +155,9 @@ export function ExitPlanModePermissionRequest({
     usedPercent: showClearContext ? getContextUsedPercent(usage, mode) : null,
     isAutoModeAvailable,
     isBypassPermissionsModeAvailable,
+    prePlanMode,
     onFeedbackChange: setPlanFeedback
-  }), [showClearContext, showUltraplan, usage, mode, isAutoModeAvailable, isBypassPermissionsModeAvailable]);
+  }), [showClearContext, showUltraplan, usage, mode, isAutoModeAvailable, isBypassPermissionsModeAvailable, prePlanMode]);
   function onImagePaste(base64Image: string, mediaType?: string, filename?: string, dimensions?: ImageDimensions, _sourcePath?: string) {
     const pasteId = nextPasteIdRef.current++;
     const newContent: PastedContent = {
@@ -432,7 +434,8 @@ export function ExitPlanModePermissionRequest({
       'yes-default-keep-context': 'default',
       ...(feature('TRANSCRIPT_CLASSIFIER') ? {
         'yes-resume-auto-mode': 'default' as const
-      } : {})
+      } : {}),
+      'yes-focus-keep-context': 'focus'
     };
     const keepContextMode = keepContextModes[value];
     if (keepContextMode) {
@@ -677,6 +680,7 @@ export function buildPlanApprovalOptions({
   usedPercent,
   isAutoModeAvailable,
   isBypassPermissionsModeAvailable,
+  prePlanMode,
   onFeedbackChange
 }: {
   showClearContext: boolean;
@@ -684,6 +688,7 @@ export function buildPlanApprovalOptions({
   usedPercent: number | null;
   isAutoModeAvailable: boolean | undefined;
   isBypassPermissionsModeAvailable: boolean | undefined;
+  prePlanMode?: string;
   onFeedbackChange: (v: string) => void;
 }): OptionWithDescription<ResponseValue>[] {
   const options: OptionWithDescription<ResponseValue>[] = [];
@@ -707,11 +712,16 @@ export function buildPlanApprovalOptions({
     }
   }
 
-  // Slot 2: keep-context with elevated mode (same priority: auto > bypass > edits).
+  // Slot 2: keep-context with elevated mode (same priority: auto > focus > bypass > edits).
   if (feature('TRANSCRIPT_CLASSIFIER') && isAutoModeAvailable) {
     options.push({
       label: 'Yes, and use auto mode',
       value: 'yes-resume-auto-mode'
+    });
+  } else if (prePlanMode === 'focus') {
+    options.push({
+      label: `Yes, and restore focus mode ${permissionModeSymbol('focus')}`,
+      value: 'yes-focus-keep-context'
     });
   } else if (isBypassPermissionsModeAvailable) {
     options.push({

@@ -928,13 +928,20 @@ export const hasPermissionsToUseTool: CanUseToolFn = async (
 
     // Focus mode: auto-approve non-dangerous commands, still prompt for dangerous ones
     if (appState.toolPermissionContext.mode === 'focus') {
-      // Dangerous commands (explicit ask rules, safety checks, or other dangerous
-      // operations like dangerous removal paths) still prompt
+      // Dangerous commands (explicit ask rules or safety checks) still prompt
       if (
         result.behavior === 'ask' &&
         (result.decisionReason?.type === 'rule' ||
-          result.decisionReason?.type === 'safetyCheck' ||
-          result.decisionReason?.type === 'other')
+          result.decisionReason?.type === 'safetyCheck')
+      ) {
+        return result
+      }
+      // Dangerous removal paths (e.g. rm *, rm /) also prompt — identified by
+      // the specific reason text set in BashTool/pathValidation.ts
+      if (
+        result.behavior === 'ask' &&
+        result.decisionReason?.type === 'other' &&
+        result.decisionReason?.reason?.includes('Dangerous')
       ) {
         return result
       }
@@ -1164,7 +1171,7 @@ export async function checkRuleBasedPermissions(
     return toolPermissionResult
   }
 
-  // 1g. Safety checks (e.g. .git/, .doge/, .vscode/, shell configs) are
+  // 1g. Safety checks (e.g. .git/, .claude/, .vscode/, shell configs) are
   // bypass-immune — they must prompt even when a PreToolUse hook returned
   // allow. checkPathSafetyForAutoEdit returns {type:'safetyCheck'} for these.
   if (
@@ -1272,7 +1279,7 @@ async function hasPermissionsToUseToolInner(
     return toolPermissionResult
   }
 
-  // 1g. Safety checks (e.g. .git/, .doge/, .vscode/, shell configs) are
+  // 1g. Safety checks (e.g. .git/, .claude/, .vscode/, shell configs) are
   // bypass-immune — they must prompt even in bypassPermissions mode.
   // checkPathSafetyForAutoEdit returns {type:'safetyCheck'} for these paths.
   if (

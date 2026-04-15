@@ -1192,8 +1192,8 @@ export const SettingSourceSchema = lazySchema(() =>
     .describe(
       'Source for loading filesystem-based settings. ' +
         "'user' - Global user settings (~/.doge/settings.json). " +
-        "'project' - Project settings (.doge/settings.json). " +
-        "'local' - Local settings (.doge/settings.local.json).",
+        "'project' - Project settings (.claude/settings.json). " +
+        "'local' - Local settings (.claude/settings.local.json).",
     ),
 )
 

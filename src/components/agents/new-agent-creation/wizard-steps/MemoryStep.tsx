@@ -43,13 +43,13 @@ export function MemoryStep() {
       label: "None (no persistent memory)",
       value: "none"
     }, {
-      label: "Project scope (.doge/agent-memory/)",
+      label: "Project scope (.claude/agent-memory/)",
       value: "project"
     }, {
-      label: "Local scope (.doge/agent-memory-local/)",
+      label: "Local scope (.claude/agent-memory-local/)",
       value: "local"
     }] : [{
-      label: "Project scope (.doge/agent-memory/) (Recommended)",
+      label: "Project scope (.claude/agent-memory/) (Recommended)",
       value: "project"
     }, {
       label: "None (no persistent memory)",
@@ -58,7 +58,7 @@ export function MemoryStep() {
       label: "User scope (~/.doge/agent-memory/)",
       value: "user"
     }, {
-      label: "Local scope (.doge/agent-memory-local/)",
+      label: "Local scope (.claude/agent-memory-local/)",
       value: "local"
     }];
     $[1] = isUserScope;

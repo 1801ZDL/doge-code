@@ -11,14 +11,14 @@ import {
 import { clearPluginOutputStyleCache } from '../utils/plugins/loadPluginOutputStyles.js'
 
 /**
- * Loads markdown files from .doge/output-styles directories throughout the project
+ * Loads markdown files from .claude/output-styles directories throughout the project
  * and from ~/.doge/output-styles directory and converts them to output styles.
  *
  * Each filename becomes a style name, and the file content becomes the style prompt.
  * The frontmatter provides name and description.
  *
  * Structure:
- * - Project .doge/output-styles/*.md -> project styles
+ * - Project .claude/output-styles/*.md -> project styles
  * - User ~/.doge/output-styles/*.md -> user styles (overridden by project styles)
  *
  * @param cwd Current working directory for project directory traversal

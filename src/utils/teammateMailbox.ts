@@ -1,7 +1,7 @@
 /**
  * Teammate Mailbox - File-based messaging system for agent swarms
  *
- * Each teammate has an inbox file at .doge/teams/{team_name}/inboxes/{agent_name}.json
+ * Each teammate has an inbox file at .claude/teams/{team_name}/inboxes/{agent_name}.json
  * Other teammates can write messages to it, and the recipient sees them as attachments.
  *
  * Note: Inboxes are keyed by agent name within a team.
