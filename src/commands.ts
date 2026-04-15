@@ -174,6 +174,7 @@ import { isFirstPartyAnthropicBaseUrl } from './utils/model/providers.js'
 import env from './commands/env/index.js'
 import exit from './commands/exit/index.js'
 import focus from './commands/focus/index.js'
+import coordinator from './commands/coordinator/index.js'
 import exportCommand from './commands/export/index.js'
 import model from './commands/model/index.js'
 import tag from './commands/tag/index.js'
@@ -275,6 +276,7 @@ const COMMANDS = memoize((): Command[] => [
   desktop,
   context,
   contextNonInteractive,
+  coordinator,
   cost,
   diff,
   doctor,

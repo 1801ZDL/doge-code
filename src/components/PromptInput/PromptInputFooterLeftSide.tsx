@@ -354,6 +354,12 @@ function ModeIndicator({
           </Text>}
       </Text> : null;
 
+  // Coordinator mode indicator
+  const coordinatorPart = isCoordinator && !getIsRemoteMode() ? <Text color="autoAccept" key="coordinator">
+        {'\u2694'}{' '}
+        coordinator on
+      </Text> : null;
+
   // Build parts array - exclude BackgroundTaskStatus when we have teammate pills
   // (teammate pills get their own row)
   const parts = [
@@ -387,7 +393,7 @@ function ModeIndicator({
   if (hasTeammatePills) {
     // Don't append spinner hints when viewing a completed teammate —
     // the "esc to return to team lead" hint already replaces "esc to interrupt"
-    const otherParts = [...(modePart ? [modePart] : []), ...parts, ...(isViewingCompletedTeammate ? [] : hintParts)];
+    const otherParts = [...(modePart ? [modePart] : []), ...(coordinatorPart ? [coordinatorPart] : []), ...parts, ...(isViewingCompletedTeammate ? [] : hintParts)];
     return <Box flexDirection="column">
         <Box>
           <BackgroundTaskStatus tasksSelected={tasksSelected} isViewingTeammate={isViewingTeammate} teammateFooterIndex={teammateFooterIndex} isLeaderIdle={!isLoading} onOpenDialog={onOpenTasksDialog} />
@@ -406,7 +412,7 @@ function ModeIndicator({
   // reconciler throws on Box-in-Text. Computed here so the empty-checks
   // below still treat "pill present" as non-empty.
   const tasksPart = hasBackgroundTasks && !hasTeammatePills && !shouldHideTasksFooter(tasks, showSpinnerTree) ? <BackgroundTaskStatus tasksSelected={tasksSelected} isViewingTeammate={isViewingTeammate} teammateFooterIndex={teammateFooterIndex} isLeaderIdle={!isLoading} onOpenDialog={onOpenTasksDialog} /> : null;
-  if (parts.length === 0 && !tasksPart && !modePart && showHint) {
+  if (parts.length === 0 && !tasksPart && !modePart && !coordinatorPart && showHint) {
     parts.push(<Text dimColor key="shortcuts-hint">
         ? for shortcuts
       </Text>);
@@ -461,7 +467,7 @@ function ModeIndicator({
   // part (e.g. the selection copy/native-select hints) grow the column
   // from 0→1 row. Always render 1 row in fullscreen; return a space when
   // empty so Yoga reserves the row without painting anything visible.
-  if (parts.length === 0 && !tasksPart && !modePart) {
+  if (parts.length === 0 && !tasksPart && !modePart && !coordinatorPart) {
     return isFullscreenEnvEnabled() ? <Text> </Text> : null;
   }
 
@@ -470,6 +476,10 @@ function ModeIndicator({
   return <Box height={1} overflow="hidden">
       {modePart && <Box flexShrink={0}>
           {modePart}
+          {(tasksPart || parts.length > 0 || coordinatorPart) && <Text dimColor> · </Text>}
+        </Box>}
+      {coordinatorPart && <Box flexShrink={0}>
+          {coordinatorPart}
           {(tasksPart || parts.length > 0) && <Text dimColor> · </Text>}
         </Box>}
       {tasksPart && <Box flexShrink={0}>
