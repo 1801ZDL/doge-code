@@ -1,6 +1,10 @@
 import { c as _c } from "react/compiler-runtime";
 // biome-ignore-all assist/source/organizeImports: ANT-ONLY import markers must not be reordered
-import { isEnvTruthy } from '../../utils/envUtils.js';
+import { feature } from 'bun:bundle';
+// Dead code elimination: conditional import for COORDINATOR_MODE
+/* eslint-disable @typescript-eslint/no-require-imports */
+const coordinatorModule = feature('COORDINATOR_MODE') ? require('../../coordinator/coordinatorMode.js') as typeof import('../../coordinator/coordinatorMode.js') : undefined;
+/* eslint-enable @typescript-eslint/no-require-imports */
 import { Box, Text, Link } from '../../ink.js';
 import * as React from 'react';
 import figures from 'figures';
@@ -269,7 +273,7 @@ function ModeIndicator({
   const hasSelection = useHasSelection();
   const selGetState = useSelection().getState;
   const hasNextTick = nextTickAt !== null;
-  const isCoordinator = isEnvTruthy(process.env.CLAUDE_CODE_COORDINATOR_MODE);
+  const isCoordinator = feature('COORDINATOR_MODE') ? coordinatorModule?.isCoordinatorMode() === true : false;
   const runningTaskCount = useMemo(() => count(Object.values(tasks), t => isBackgroundTask(t) && !("external" === 'ant' && isPanelAgentTask(t))), [tasks]);
   const tasksV2 = useTasksV2();
   const hasTaskItems = tasksV2 !== undefined && tasksV2.length > 0;
