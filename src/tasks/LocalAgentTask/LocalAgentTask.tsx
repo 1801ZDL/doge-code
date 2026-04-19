@@ -167,6 +167,25 @@ export function queuePendingMessage(taskId: string, msg: string, setAppState: (f
 }
 
 /**
+ * Queue a message for the agent AND append it to the display (transcript).
+ * Use this for messages that should be visible to the user.
+ */
+export function queueAndDisplayMessage(taskId: string, msg: string, setAppState: (f: (prev: AppState) => AppState) => void): void {
+  // Create a system message for display
+  const displayMessage: Message = {
+    id: `system-reminder-${Date.now()}`,
+    type: 'user',
+    role: 'user',
+    content: msg,
+  };
+  updateTaskState<LocalAgentTaskState>(taskId, setAppState, task => ({
+    ...task,
+    pendingMessages: [...task.pendingMessages, msg],
+    messages: [...(task.messages ?? []), displayMessage]
+  }));
+}
+
+/**
  * Append a message to task.messages so it appears in the viewed transcript
  * immediately. Caller constructs the Message (breaks the messages.ts cycle).
  * queuePendingMessage and resumeAgentBackground route the prompt to the
