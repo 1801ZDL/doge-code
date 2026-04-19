@@ -32,12 +32,12 @@ export function initBundledSkills(): void {
   registerSimplifySkill()
   registerBatchSkill()
   registerStuckSkill()
-  if (feature('KAIROS') || feature('KAIROS_DREAM')) {
-    /* eslint-disable @typescript-eslint/no-require-imports */
-    const { registerDreamSkill } = require('./dream.js')
-    /* eslint-enable @typescript-eslint/no-require-imports */
-    registerDreamSkill()
-  }
+  // /dream is available regardless of KAIROS feature flags, same as /remember.
+  // Users can invoke it anytime via /dream or /dream <focus context>.
+  /* eslint-disable @typescript-eslint/no-require-imports */
+  const { registerDreamSkill } = require('./dream.js')
+  /* eslint-enable @typescript-eslint/no-require-imports */
+  registerDreamSkill()
   if (feature('REVIEW_ARTIFACT')) {
     /* eslint-disable @typescript-eslint/no-require-imports */
     const { registerHunterSkill } = require('./hunter.js')
