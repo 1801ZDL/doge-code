@@ -249,7 +249,15 @@ function getSimpleDoingTasksSection(): string {
     userHelpSubitems,
   ]
 
-  return [`# Doing tasks`, ...prependBullets(items)].join(`\n`)
+  // Goal tracking section for long-running sessions
+  const goalTrackingItems = [
+    `At the start of a task, briefly state what "done" looks like — the specific outcome the user wants, not just the feature name.`,
+    `During extended work (30+ minutes, many tool calls, or multiple sessions), pause and reflect: "Am I still solving the original problem? Does my current approach still align with the success criteria?"`,
+    `Before declaring a task complete, verify: (1) the stated goal is met, (2) nothing from the original request was overlooked, (3) any edge cases or follow-up work mentioned by the user has been handled.`,
+    `If you catch yourself drifting from the original task, acknowledge it and refocus. Say: "I notice I've been focusing on [X] but the original task was about [Y]. Let me adjust."`,
+  ]
+
+  return [`# Doing tasks`, ...prependBullets(items), '', '# Goal tracking', ...prependBullets(goalTrackingItems)].join(`\n`)
 }
 
 function getActionsSection(): string {
