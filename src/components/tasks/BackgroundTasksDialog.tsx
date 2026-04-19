@@ -163,6 +163,18 @@ export function BackgroundTasksDialog({
   });
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
 
+  // When tasks register after the dialog opens (e.g., coordinator spawns a subagent),
+  // auto-transition from list to detail if there's now exactly one task.
+  // Without this, useState initializer only runs on mount — if the task wasn't
+  // registered yet, viewState stays 'list' forever even after task appears.
+  useEffect(() => {
+    const allItems = getSelectableBackgroundTasks(typedTasks, foregroundedTaskId);
+    if (allItems.length === 1 && viewState.mode === 'list') {
+      skippedListOnMount.current = true;
+      setViewState({ mode: 'detail', itemId: allItems[0]!.id });
+    }
+  }, [typedTasks, foregroundedTaskId, viewState.mode]);
+
   // Register as modal overlay so parent Chat keybindings (up/down for history)
   // are deactivated while this dialog is open
   useRegisterOverlay('background-tasks-dialog');
