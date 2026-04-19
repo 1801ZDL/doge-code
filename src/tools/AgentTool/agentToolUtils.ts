@@ -31,10 +31,14 @@ import {
   getTokenCountFromTracker,
   isLocalAgentTask,
   killAsyncAgent,
+  queuePendingMessage,
+  queueAndDisplayMessage,
   type ProgressTracker,
   updateAgentProgress as updateAsyncAgentProgress,
   updateProgressFromMessage,
 } from '../../tasks/LocalAgentTask/LocalAgentTask.js'
+import { StuckDetector } from '../../services/stuckDetector/stuckDetector.js'
+import { GoalReminderDetector } from '../../services/goalReminderDetector/goalReminderDetector.js'
 import { asAgentId } from '../../types/ids.js'
 import type { Message as MessageType } from '../../types/message.js'
 import { isAgentSwarmsEnabled } from '../../utils/agentSwarmsEnabled.js'
@@ -535,6 +539,8 @@ export async function runAsyncAgentLifecycle({
 }): Promise<void> {
   let stopSummarization: (() => void) | undefined
   const agentMessages: MessageType[] = []
+  const stuckDetector = new StuckDetector()
+  const goalReminderDetector = new GoalReminderDetector()
   try {
     const tracker = createProgressTracker()
     const resolveActivity = createActivityDescriptionResolver(
@@ -589,6 +595,21 @@ export async function runAsyncAgentLifecycle({
           metadata.startTime,
           lastToolName,
         )
+      }
+      // Stuck detection: record tool calls and inject reflection if looping
+      stuckDetector.recordToolCalls([message])
+      if (stuckDetector.shouldReflect()) {
+        const reflection = stuckDetector.getReflectionMessage()
+        queuePendingMessage(taskId, reflection, rootSetAppState)
+        stuckDetector.acknowledgeReflection()
+      }
+      // Goal reminder: inject periodic self-reflection reminders for long-running tasks
+      // Use queueAndDisplayMessage so reminders are visible to the user
+      goalReminderDetector.recordToolCalls([message])
+      if (goalReminderDetector.shouldRemind()) {
+        const reminder = goalReminderDetector.getReminderMessage()
+        queueAndDisplayMessage(taskId, reminder, rootSetAppState)
+        goalReminderDetector.acknowledgeReminder()
       }
     }
 
