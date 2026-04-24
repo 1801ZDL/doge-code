@@ -68,6 +68,8 @@ import { createAbortController } from '../abortController.js'
 import { type AgentContext, runWithAgentContext } from '../agentContext.js'
 import { count } from '../array.js'
 import { logForDebugging } from '../debug.js'
+import { mkdirSync, appendFileSync } from 'fs'
+import { dirname } from 'path'
 import { cloneFileStateCache } from '../fileStateCache.js'
 import {
   SUBAGENT_REJECT_MESSAGE,
@@ -113,6 +115,15 @@ import { TEAMMATE_SYSTEM_PROMPT_ADDENDUM } from './teammatePromptAddendum.js'
 type SetAppStateFn = (updater: (prev: AppState) => AppState) => void
 
 const PERMISSION_POLL_INTERVAL_MS = 500
+
+const DEBUG_LOG_FILE = '/tmp/doge-worker-debug.log'
+function appendDebugLog(msg: string): void {
+  try {
+    const timestamp = new Date().toISOString()
+    const line = `[${timestamp}] ${msg}\n`
+    appendFileSync(DEBUG_LOG_FILE, line)
+  } catch {}
+}
 
 /**
  * Creates a canUseTool function for in-process teammates that properly resolves
@@ -1168,7 +1179,7 @@ export async function runInProcessTeammate(
       // Run agent within contexts
       await runWithTeammateContext(teammateContext, async () => {
         return runWithAgentContext(agentContext, async () => {
-          console.error(`[DEBUG] ${identity.agentId} STARTING runWithAgentContext`)
+          appendDebugLog(`${identity.agentId} STARTING runWithAgentContext`)
           // Mark task as running (not idle)
           updateTaskState(
             taskId,
@@ -1183,7 +1194,7 @@ export async function runInProcessTeammate(
           // so they CAN show permission prompts (unlike true background agents).
           // Use currentWorkAbortController so Escape stops this turn only, not the teammate.
           logForDebugging(`[inProcessRunner] ${identity.agentId} calling runAgent, tools count: ${toolUseContext.options.tools.length}`)
-          console.error(`[DEBUG] ${identity.agentId} BEFORE for await runAgent call`)
+          appendDebugLog(` ${identity.agentId} BEFORE for await runAgent call`)
           for await (const message of runAgent({
             agentDefinition: iterationAgentDefinition,
             promptMessages,
@@ -1310,13 +1321,13 @@ export async function runInProcessTeammate(
       logForDebugging(`[inProcessRunner] ${identity.agentId} runAgent loop ended, workWasAborted=${workWasAborted}`)
 
       // Check if lifecycle aborted during agent run (kills whole teammate)
-      console.error(`[DEBUG] ${identity.agentId} runAgent loop ended, checking abort state`)
+      appendDebugLog(` ${identity.agentId} runAgent loop ended, checking abort state`)
       if (abortController.signal.aborted) {
-        console.error(`[DEBUG] ${identity.agentId} abortController is aborted, exiting loop`)
+        appendDebugLog(` ${identity.agentId} abortController is aborted, exiting loop`)
         break
       }
 
-      console.error(`[DEBUG] ${identity.agentId} workWasAborted=${workWasAborted}, proceeding to idle`)
+      appendDebugLog(` ${identity.agentId} workWasAborted=${workWasAborted}, proceeding to idle`)
       // If work was aborted (Escape), log it and add interrupt message, then continue to idle state
       if (workWasAborted) {
         logForDebugging(
@@ -1355,7 +1366,7 @@ export async function runInProcessTeammate(
       )
 
       // Add debug message to task so it appears in transcript
-      console.error(`[DEBUG] ${identity.agentId} entering idle state, waiting for messages...`)
+      appendDebugLog(` ${identity.agentId} entering idle state, waiting for messages...`)
 
       // Note: We do NOT automatically send the teammate's response to the leader.
       // Teammates should use the Teammate tool to communicate with the leader.
