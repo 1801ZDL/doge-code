@@ -1181,6 +1181,7 @@ export async function runInProcessTeammate(
           // In-process teammates are async but run in the same process as the leader,
           // so they CAN show permission prompts (unlike true background agents).
           // Use currentWorkAbortController so Escape stops this turn only, not the teammate.
+          logForDebugging(`[inProcessRunner] ${identity.agentId} calling runAgent, tools count: ${toolUseContext.options.tools.length}`)
           for await (const message of runAgent({
             agentDefinition: iterationAgentDefinition,
             promptMessages,
@@ -1571,5 +1572,6 @@ export function startInProcessTeammate(config: InProcessRunnerConfig): void {
   const agentId = config.identity.agentId
   void runInProcessTeammate(config).catch(error => {
     logForDebugging(`[inProcessRunner] Unhandled error in ${agentId}: ${error}`)
+    logForDebugging(`[inProcessRunner] Stack: ${error instanceof Error ? error.stack : 'no stack'}`)
   })
 }
