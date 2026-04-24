@@ -3,6 +3,7 @@ import type { UUID } from 'crypto'
 import { randomUUID } from 'crypto'
 import uniqBy from 'lodash-es/uniqBy.js'
 import { logForDebugging } from 'src/utils/debug.js'
+import { isEnvTruthy } from '../../utils/envUtils.js'
 import { getProjectRoot, getSessionId } from '../../bootstrap/state.js'
 import { getCommand, getSkillToolCommands, hasCommand } from '../../commands.js'
 import {
@@ -914,6 +915,30 @@ async function getAgentSystemPrompt(
   try {
     const agentPrompt = agentDefinition.getSystemPrompt({ toolUseContext })
     const prompts = [agentPrompt]
+
+    // In coordinator mode, append skill and communication guidance to all agents
+    if (isEnvTruthy(process.env.CLAUDE_CODE_COORDINATOR_MODE)) {
+      prompts.push(`
+
+### Skills
+You have access to skills via the SkillTool. When a task benefits from
+structured workflow guidance, invoke the appropriate skill:
+- /brainstorming  — for exploring designs or solving ambiguous problems
+- /systematic-debugging — for tracking down root causes
+- /test-driven-development — before writing implementation code
+- /verify — before claiming a task is complete
+- /simplify — when code needs review for quality and reuse
+
+### Communicating with the Commander
+Use SendMessage to contact the Commander when:
+- You need clarification on the task scope
+- You encounter blockers or trade-off decisions
+- You want to validate your approach before proceeding
+- You have findings that affect other ongoing work
+
+Send a message using: SendMessage(to: "Commander", message: "...")
+`)
+    }
 
     return await enhanceSystemPromptWithEnvDetails(
       prompts,
