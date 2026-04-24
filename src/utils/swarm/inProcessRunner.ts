@@ -1168,6 +1168,7 @@ export async function runInProcessTeammate(
       // Run agent within contexts
       await runWithTeammateContext(teammateContext, async () => {
         return runWithAgentContext(agentContext, async () => {
+          console.error(`[DEBUG] ${identity.agentId} STARTING runWithAgentContext`)
           // Mark task as running (not idle)
           updateTaskState(
             taskId,
@@ -1182,6 +1183,7 @@ export async function runInProcessTeammate(
           // so they CAN show permission prompts (unlike true background agents).
           // Use currentWorkAbortController so Escape stops this turn only, not the teammate.
           logForDebugging(`[inProcessRunner] ${identity.agentId} calling runAgent, tools count: ${toolUseContext.options.tools.length}`)
+          console.error(`[DEBUG] ${identity.agentId} BEFORE for await runAgent call`)
           for await (const message of runAgent({
             agentDefinition: iterationAgentDefinition,
             promptMessages,
