@@ -55,6 +55,7 @@ import {
   sanitizeAgentName,
   sanitizeName,
   writeTeamFileAsync,
+  getTeamFilePath,
 } from '../../utils/swarm/teamHelpers.js'
 import {
   assignTeammateColor,
@@ -488,9 +489,29 @@ async function handleSpawnSplitPane(
   // Register agent in the team file
   const teamFile = await readTeamFileAsync(teamName)
   if (!teamFile) {
-    throw new Error(
-      `Team "${teamName}" does not exist. Call spawnTeam first to create the team.`,
-    )
+    // Team doesn't exist — create a minimal team file with just the leader as member.
+    // This enables spawnTeammate to work without requiring an explicit spawnTeam call first.
+    // Common in coordinator mode where agents are spawned but no explicit team is created.
+    const leadAgentId = formatAgentId(TEAM_LEAD_NAME, teamName)
+    const newTeamFile = {
+      name: teamName,
+      createdAt: Date.now(),
+      leadAgentId,
+      members: [
+        {
+          agentId: leadAgentId,
+          name: TEAM_LEAD_NAME,
+          agentType: 'commander',
+          joinedAt: Date.now(),
+          tmuxPaneId: 'leader',
+          cwd: getCwd(),
+          subscriptions: [],
+        },
+      ],
+    }
+    await writeTeamFileAsync(teamName, newTeamFile)
+    // Now read it back so the rest of the code works as expected
+    var teamFile = await readTeamFileAsync(teamName)
   }
   teamFile.members.push({
     agentId: teammateId,
@@ -702,9 +723,29 @@ async function handleSpawnSeparateWindow(
   // Register agent in the team file
   const teamFile = await readTeamFileAsync(teamName)
   if (!teamFile) {
-    throw new Error(
-      `Team "${teamName}" does not exist. Call spawnTeam first to create the team.`,
-    )
+    // Team doesn't exist — create a minimal team file with just the leader as member.
+    // This enables spawnTeammate to work without requiring an explicit spawnTeam call first.
+    // Common in coordinator mode where agents are spawned but no explicit team is created.
+    const leadAgentId = formatAgentId(TEAM_LEAD_NAME, teamName)
+    const newTeamFile = {
+      name: teamName,
+      createdAt: Date.now(),
+      leadAgentId,
+      members: [
+        {
+          agentId: leadAgentId,
+          name: TEAM_LEAD_NAME,
+          agentType: 'commander',
+          joinedAt: Date.now(),
+          tmuxPaneId: 'leader',
+          cwd: getCwd(),
+          subscriptions: [],
+        },
+      ],
+    }
+    await writeTeamFileAsync(teamName, newTeamFile)
+    // Now read it back so the rest of the code works as expected
+    var teamFile = await readTeamFileAsync(teamName)
   }
   teamFile.members.push({
     agentId: teammateId,
@@ -988,9 +1029,29 @@ async function handleSpawnInProcess(
   // Register agent in the team file
   const teamFile = await readTeamFileAsync(teamName)
   if (!teamFile) {
-    throw new Error(
-      `Team "${teamName}" does not exist. Call spawnTeam first to create the team.`,
-    )
+    // Team doesn't exist — create a minimal team file with just the leader as member.
+    // This enables spawnTeammate to work without requiring an explicit spawnTeam call first.
+    // Common in coordinator mode where agents are spawned but no explicit team is created.
+    const leadAgentId = formatAgentId(TEAM_LEAD_NAME, teamName)
+    const newTeamFile = {
+      name: teamName,
+      createdAt: Date.now(),
+      leadAgentId,
+      members: [
+        {
+          agentId: leadAgentId,
+          name: TEAM_LEAD_NAME,
+          agentType: 'commander',
+          joinedAt: Date.now(),
+          tmuxPaneId: 'leader',
+          cwd: getCwd(),
+          subscriptions: [],
+        },
+      ],
+    }
+    await writeTeamFileAsync(teamName, newTeamFile)
+    // Now read it back so the rest of the code works as expected
+    var teamFile = await readTeamFileAsync(teamName)
   }
   teamFile.members.push({
     agentId: teammateId,
