@@ -487,7 +487,7 @@ async function handleSpawnSplitPane(
   })
 
   // Register agent in the team file
-  const teamFile = await readTeamFileAsync(teamName)
+  let teamFile = await readTeamFileAsync(teamName)
   if (!teamFile) {
     // Team doesn't exist — create a minimal team file with just the leader as member.
     // This enables spawnTeammate to work without requiring an explicit spawnTeam call first.
@@ -511,7 +511,7 @@ async function handleSpawnSplitPane(
     }
     await writeTeamFileAsync(teamName, newTeamFile)
     // Now read it back so the rest of the code works as expected
-    var teamFile = await readTeamFileAsync(teamName)
+    teamFile = await readTeamFileAsync(teamName)
   }
   teamFile.members.push({
     agentId: teammateId,
@@ -721,7 +721,7 @@ async function handleSpawnSeparateWindow(
   })
 
   // Register agent in the team file
-  const teamFile = await readTeamFileAsync(teamName)
+  let teamFile = await readTeamFileAsync(teamName)
   if (!teamFile) {
     // Team doesn't exist — create a minimal team file with just the leader as member.
     // This enables spawnTeammate to work without requiring an explicit spawnTeam call first.
@@ -745,7 +745,7 @@ async function handleSpawnSeparateWindow(
     }
     await writeTeamFileAsync(teamName, newTeamFile)
     // Now read it back so the rest of the code works as expected
-    var teamFile = await readTeamFileAsync(teamName)
+    teamFile = await readTeamFileAsync(teamName)
   }
   teamFile.members.push({
     agentId: teammateId,
@@ -1027,7 +1027,7 @@ async function handleSpawnInProcess(
   })
 
   // Register agent in the team file
-  const teamFile = await readTeamFileAsync(teamName)
+  let teamFile = await readTeamFileAsync(teamName)
   if (!teamFile) {
     // Team doesn't exist — create a minimal team file with just the leader as member.
     // This enables spawnTeammate to work without requiring an explicit spawnTeam call first.
@@ -1051,7 +1051,7 @@ async function handleSpawnInProcess(
     }
     await writeTeamFileAsync(teamName, newTeamFile)
     // Now read it back so the rest of the code works as expected
-    var teamFile = await readTeamFileAsync(teamName)
+    teamFile = await readTeamFileAsync(teamName)
   }
   teamFile.members.push({
     agentId: teammateId,
