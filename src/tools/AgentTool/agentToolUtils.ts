@@ -20,6 +20,7 @@ import type {
   Tools,
   ToolUseContext,
 } from '../../Tool.js'
+import { isCoordinatorMode } from '../../coordinator/coordinatorMode.js'
 import { toolMatchesName } from '../../Tool.js'
 import {
   completeAgentTask as completeAsyncAgent,
@@ -602,49 +603,85 @@ export async function runAsyncAgentLifecycle({
       }
     }
 
-    stopSummarization?.()
-
     const agentResult = finalizeAgentTool(agentMessages, taskId, metadata)
 
-    // Mark task completed FIRST so TaskOutput(block=true) unblocks
-    // immediately. classifyHandoffIfNeeded (API call) and getWorktreeResult
-    // (git exec) are notification embellishments that can hang — they must
-    // not gate the status transition (gh-20236).
-    completeAsyncAgent(agentResult, rootSetAppState)
+    // In coordinator mode, agent waits in idle loop after completing work.
+    // Commander reviews the work and decides whether to kill or accept.
+    // This allows real-time interaction: agent completes → stays alive → Commander reviews → kill or accept.
+    // NOTE: We do NOT call completeAgentTask here because it sets abortController to undefined,
+    // which would prevent TaskStop from being able to kill the agent.
+    const IDLE_TIMEOUT_MS = 5 * 60 * 1000 // 5 minutes
 
-    let finalMessage = extractTextContent(agentResult.content, '\n')
-
-    if (feature('TRANSCRIPT_CLASSIFIER')) {
-      const handoffWarning = await classifyHandoffIfNeeded({
-        agentMessages,
-        tools: toolUseContext.options.tools,
-        toolPermissionContext:
-          toolUseContext.getAppState().toolPermissionContext,
-        abortSignal: abortController.signal,
-        subagentType: metadata.agentType,
-        totalToolUseCount: agentResult.totalToolUseCount,
-      })
-      if (handoffWarning) {
-        finalMessage = `${handoffWarning}\n\n${finalMessage}`
+    if (isCoordinatorMode() && !abortController.signal.aborted) {
+      const idleStart = Date.now()
+      while (!abortController.signal.aborted && Date.now() - idleStart < IDLE_TIMEOUT_MS) {
+        await new Promise(resolve => setTimeout(resolve, 500))
       }
     }
 
-    const worktreeResult = await getWorktreeResult()
+    stopSummarization?.()
 
-    enqueueAgentNotification({
-      taskId,
-      description,
-      status: 'completed',
-      setAppState: rootSetAppState,
-      finalMessage,
-      usage: {
-        totalTokens: getTokenCountFromTracker(tracker),
-        toolUses: agentResult.totalToolUseCount,
-        durationMs: agentResult.totalDurationMs,
-      },
-      toolUseId: toolUseContext.toolUseId,
-      ...worktreeResult,
-    })
+    if (abortController.signal.aborted) {
+      // Commander sent shutdown via TaskStop - task was killed mid-review
+      killAsyncAgent(taskId, rootSetAppState)
+      logEvent('tengu_agent_tool_terminated', {
+        agent_type: metadata.agentType as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
+        model: metadata.resolvedAgentModel as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
+        duration_ms: Date.now() - metadata.startTime,
+        is_async: true,
+        is_built_in_agent: metadata.isBuiltInAgent,
+        reason: 'user_kill_async' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
+      })
+      const partialResult = extractPartialResult(agentMessages)
+      const worktreeResult = await getWorktreeResult()
+      enqueueAgentNotification({
+        taskId,
+        description,
+        status: 'killed',
+        setAppState: rootSetAppState,
+        toolUseId: toolUseContext.toolUseId,
+        finalMessage: partialResult,
+        ...worktreeResult,
+      })
+    } else {
+      // Agent completed and idle timeout reached (Commander didn't kill it)
+      // Or non-coordinator mode - normal completion
+      let finalMessage = extractTextContent(agentResult.content, '\n')
+
+      if (feature('TRANSCRIPT_CLASSIFIER')) {
+        const handoffWarning = await classifyHandoffIfNeeded({
+          agentMessages,
+          tools: toolUseContext.options.tools,
+          toolPermissionContext:
+            toolUseContext.getAppState().toolPermissionContext,
+          abortSignal: abortController.signal,
+          subagentType: metadata.agentType,
+          totalToolUseCount: agentResult.totalToolUseCount,
+        })
+        if (handoffWarning) {
+          finalMessage = `${handoffWarning}\n\n${finalMessage}`
+        }
+      }
+
+      const worktreeResult = await getWorktreeResult()
+
+      // Mark task completed so it disappears from background task list
+      completeAsyncAgent(agentResult, rootSetAppState)
+      enqueueAgentNotification({
+        taskId,
+        description,
+        status: 'completed',
+        setAppState: rootSetAppState,
+        finalMessage,
+        usage: {
+          totalTokens: getTokenCountFromTracker(tracker),
+          toolUses: agentResult.totalToolUseCount,
+          durationMs: agentResult.totalDurationMs,
+        },
+        toolUseId: toolUseContext.toolUseId,
+        ...worktreeResult,
+      })
+    }
   } catch (error) {
     stopSummarization?.()
     if (error instanceof AbortError) {
