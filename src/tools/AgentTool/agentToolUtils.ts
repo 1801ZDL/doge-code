@@ -43,7 +43,7 @@ import { asAgentId } from '../../types/ids.js'
 import type { Message as MessageType } from '../../types/message.js'
 import { isAgentSwarmsEnabled } from '../../utils/agentSwarmsEnabled.js'
 import { logForDebugging } from '../../utils/debug.js'
-import { isInProtectedNamespace } from '../../utils/envUtils.js'
+import { isEnvTruthy, isInProtectedNamespace } from '../../utils/envUtils.js'
 import { AbortError, errorMessage } from '../../utils/errors.js'
 import { createChildAbortController } from '../../utils/abortController.js'
 import {
@@ -66,6 +66,7 @@ import { isInProcessTeammate } from '../../utils/teammateContext.js'
 import { getTokenCountFromUsage } from '../../utils/tokens.js'
 import { EXIT_PLAN_MODE_V2_TOOL_NAME } from '../ExitPlanModeTool/constants.js'
 import { AGENT_TOOL_NAME, LEGACY_AGENT_TOOL_NAME } from './constants.js'
+import { SEND_MESSAGE_TOOL_NAME } from '../SendMessageTool/constants.js'
 import type { AgentDefinition } from './loadAgentsDir.js'
 export type ResolvedAgentTools = {
   hasWildcard: boolean
@@ -220,6 +221,21 @@ export function resolveAgentTools(
       }
     } else {
       invalidTools.push(toolSpec)
+    }
+  }
+
+  // In coordinator mode, force-inject SendMessage if it passed filtering
+  // but wasn't in the agent's explicit tools list.
+  // This ensures all agents (including those with explicit tool lists) can
+  // communicate with the Commander.
+  if (
+    isEnvTruthy(process.env.CLAUDE_CODE_COORDINATOR_MODE) &&
+    !resolvedToolsSet.has(SEND_MESSAGE_TOOL_NAME)
+  ) {
+    const sendMessageTool = availableToolMap.get(SEND_MESSAGE_TOOL_NAME)
+    if (sendMessageTool) {
+      resolved.push(sendMessageTool)
+      resolvedToolsSet.add(SEND_MESSAGE_TOOL_NAME)
     }
   }
 
