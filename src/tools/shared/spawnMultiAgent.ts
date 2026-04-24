@@ -882,6 +882,7 @@ async function handleSpawnInProcess(
   input: SpawnInput,
   context: ToolUseContext,
 ): Promise<{ data: SpawnOutput }> {
+  logForDebugging(`[handleSpawnInProcess] called with name=${input.name}, agent_type=${input.agent_type}`)
   const { setAppState, getAppState } = context
   const { name, prompt, agent_type, plan_mode_required } = input
 
@@ -1103,6 +1104,7 @@ async function handleSpawn(
   context: ToolUseContext,
 ): Promise<{ data: SpawnOutput }> {
   // Check if in-process mode is enabled via feature flag
+  logForDebugging(`[handleSpawn] isInProcessEnabled=${isInProcessEnabled()}, input.name=${input.name}, input.team_name=${input.team_name}`)
   if (isInProcessEnabled()) {
     return handleSpawnInProcess(input, context)
   }
