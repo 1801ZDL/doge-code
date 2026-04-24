@@ -107,13 +107,22 @@ import {
   normalizeMessage,
 } from './utils/queryHelpers.js'
 
-// Dead code elimination: conditional import for coordinator mode
+// Conditional import for coordinator mode.
+// Bypass feature flag — when running unbundled (bun run), feature() returns false
+// even though CLAUDE_CODE_COORDINATOR_MODE may be set.
 /* eslint-disable @typescript-eslint/no-require-imports */
+const coordinatorModeModule = (() => {
+  try {
+    return require('./coordinator/coordinatorMode.js') as typeof import('./coordinator/coordinatorMode.js')
+  } catch {
+    return null
+  }
+})()
 const getCoordinatorUserContext: (
   mcpClients: ReadonlyArray<{ name: string }>,
   scratchpadDir?: string,
-) => { [k: string]: string } = feature('COORDINATOR_MODE')
-  ? require('./coordinator/coordinatorMode.js').getCoordinatorUserContext
+) => { [k: string]: string } = coordinatorModeModule
+  ? coordinatorModeModule.getCoordinatorUserContext
   : () => ({})
 /* eslint-enable @typescript-eslint/no-require-imports */
 
@@ -303,6 +312,7 @@ export class QueryEngine {
       ...baseUserContext,
       ...getCoordinatorUserContext(
         mcpClients,
+        initialAppState.agentDefinitions,
         isScratchpadEnabled() ? getScratchpadDir() : undefined,
       ),
     }

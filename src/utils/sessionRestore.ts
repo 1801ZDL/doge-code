@@ -254,7 +254,7 @@ export async function refreshAgentDefinitionsForModeSwitch(
   cliAgents: AgentDefinition[],
   currentAgentDefinitions: AgentDefinitionsResult,
 ): Promise<AgentDefinitionsResult> {
-  if (!feature('COORDINATOR_MODE') || !modeWasSwitched) {
+  if (!modeWasSwitched) {
     return currentAgentDefinitions
   }
 
@@ -308,6 +308,7 @@ type ResumeLoadResult = {
   customTitle?: string
   tag?: string
   mode?: 'coordinator' | 'normal'
+  permissionMode?: 'focus' | 'default' | 'yolo' | 'plan' | 'acceptEdits' | 'bypassPermissions'
   worktreeSession?: PersistedWorktreeSession | null
   prNumber?: number
   prUrl?: string
@@ -425,11 +426,31 @@ export async function processResumedConversation(
 ): Promise<ProcessedResume> {
   // Match coordinator/normal mode to the resumed session
   let modeWarning: string | undefined
-  if (feature('COORDINATOR_MODE')) {
-    modeWarning = context.modeApi?.matchSessionMode(result.mode)
-    if (modeWarning) {
-      result.messages.push(createSystemMessage(modeWarning, 'warning'))
+  modeWarning = context.modeApi?.matchSessionMode(result.mode)
+  if (modeWarning) {
+    result.messages.push(createSystemMessage(modeWarning, 'warning'))
+  }
+
+  // Restore permission mode (focus/default/yolo/etc) from resumed session
+  const resumedPermissionMode = result.permissionMode
+  const currentPermissionMode = context.initialState.toolPermissionContext.mode
+  if (resumedPermissionMode && resumedPermissionMode !== currentPermissionMode) {
+    context.initialState.toolPermissionContext.mode = resumedPermissionMode
+    const permissionModeSymbols: Record<string, string> = {
+      focus: '🔍',
+      default: '',
+      yolo: '⚡',
+      plan: '📋',
+      acceptEdits: '✏️',
+      bypassPermissions: '🔓',
     }
+    const symbol = permissionModeSymbols[resumedPermissionMode] || ''
+    result.messages.push(
+      createSystemMessage(
+        `${symbol} Restored ${resumedPermissionMode} mode from resumed session.`,
+        'warning',
+      ),
+    )
   }
 
   // Reuse the resumed session's ID unless --fork-session is specified
@@ -511,9 +532,7 @@ export async function processResumedConversation(
     )
 
   // Persist the current mode so future resumes know what mode this session was in
-  if (feature('COORDINATOR_MODE')) {
-    saveMode(context.modeApi?.isCoordinatorMode() ? 'coordinator' : 'normal')
-  }
+  saveMode(context.modeApi?.isCoordinatorMode() ? 'coordinator' : 'normal')
 
   // Compute initial state before render (per CLAUDE.md guidelines)
   const restoredAttribution = opts.includeAttribution

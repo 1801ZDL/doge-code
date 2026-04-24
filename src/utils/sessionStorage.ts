@@ -584,6 +584,7 @@ class Project {
   currentSessionLastPrompt: string | undefined
   currentSessionAgentSetting: string | undefined
   currentSessionMode: 'coordinator' | 'normal' | undefined
+  currentSessionPermissionMode: 'focus' | 'default' | 'yolo' | 'plan' | 'acceptEdits' | 'bypassPermissions' | undefined
   // Tri-state: undefined = never touched (don't write), null = exited worktree,
   // object = currently in worktree. reAppendSessionMetadata writes null so
   // --resume knows the session exited (vs. crashed while inside).
@@ -858,6 +859,13 @@ class Project {
       appendEntryToFile(this.sessionFile, {
         type: 'mode',
         mode: this.currentSessionMode,
+        sessionId,
+      })
+    }
+    if (this.currentSessionPermissionMode) {
+      appendEntryToFile(this.sessionFile, {
+        type: 'permission-mode',
+        permissionMode: this.currentSessionPermissionMode,
         sessionId,
       })
     }
@@ -2927,6 +2935,18 @@ export function saveMode(mode: 'coordinator' | 'normal'): void {
 }
 
 /**
+ * Cache the session's permission mode (focus/default/yolo/etc). Written to disk
+ * by materializeSessionFile on the first user message, and re-stamped by
+ * reAppendSessionMetadata on exit. Cache-only here to avoid creating
+ * metadata-only session files at startup.
+ */
+export function savePermissionMode(
+  mode: 'focus' | 'default' | 'yolo' | 'plan' | 'acceptEdits' | 'bypassPermissions',
+): void {
+  getProject().currentSessionPermissionMode = mode
+}
+
+/**
  * Record the session's worktree state for --resume. Written to disk by
  * materializeSessionFile on the first user message and re-stamped by
  * reAppendSessionMetadata on exit. Pass null when exiting a worktree
@@ -3060,6 +3080,7 @@ export async function loadFullLog(log: LogOption): Promise<LogOption> {
       agentColor: sessionId ? agentColors.get(sessionId) : log.agentColor,
       agentSetting: sessionId ? agentSettings.get(sessionId) : log.agentSetting,
       mode: sessionId ? (modes.get(sessionId) as LogOption['mode']) : log.mode,
+      permissionMode: sessionId ? (permissionModes.get(sessionId) as LogOption['permissionMode']) : log.permissionMode,
       worktreeSession:
         sessionId && worktreeStates.has(sessionId)
           ? worktreeStates.get(sessionId)
@@ -3530,6 +3551,7 @@ export async function loadTranscriptFile(
   prUrls: Map<UUID, string>
   prRepositories: Map<UUID, string>
   modes: Map<UUID, string>
+  permissionModes: Map<UUID, string>
   worktreeStates: Map<UUID, PersistedWorktreeSession | null>
   fileHistorySnapshots: Map<UUID, FileHistorySnapshotMessage>
   attributionSnapshots: Map<UUID, AttributionSnapshotMessage>
@@ -3550,6 +3572,7 @@ export async function loadTranscriptFile(
   const prUrls = new Map<UUID, string>()
   const prRepositories = new Map<UUID, string>()
   const modes = new Map<UUID, string>()
+  const permissionModes = new Map<UUID, string>()
   const worktreeStates = new Map<UUID, PersistedWorktreeSession | null>()
   const fileHistorySnapshots = new Map<UUID, FileHistorySnapshotMessage>()
   const attributionSnapshots = new Map<UUID, AttributionSnapshotMessage>()
@@ -3647,6 +3670,8 @@ export async function loadTranscriptFile(
           agentSettings.set(entry.sessionId, entry.agentSetting)
         } else if (entry.type === 'mode' && entry.sessionId) {
           modes.set(entry.sessionId, entry.mode)
+        } else if (entry.type === 'permission-mode' && entry.sessionId) {
+          permissionModes.set(entry.sessionId, entry.permissionMode)
         } else if (entry.type === 'worktree-state' && entry.sessionId) {
           worktreeStates.set(entry.sessionId, entry.worktreeSession)
         } else if (entry.type === 'pr-link' && entry.sessionId) {
@@ -3715,6 +3740,8 @@ export async function loadTranscriptFile(
         agentSettings.set(entry.sessionId, entry.agentSetting)
       } else if (entry.type === 'mode' && entry.sessionId) {
         modes.set(entry.sessionId, entry.mode)
+      } else if (entry.type === 'permission-mode' && entry.sessionId) {
+        permissionModes.set(entry.sessionId, entry.permissionMode)
       } else if (entry.type === 'worktree-state' && entry.sessionId) {
         worktreeStates.set(entry.sessionId, entry.worktreeSession)
       } else if (entry.type === 'pr-link' && entry.sessionId) {
@@ -3847,6 +3874,7 @@ export async function loadTranscriptFile(
     prUrls,
     prRepositories,
     modes,
+    permissionModes,
     worktreeStates,
     fileHistorySnapshots,
     attributionSnapshots,
@@ -4719,6 +4747,7 @@ export async function loadAllLogsFromSessionFile(
       agentColor: agentColors.get(sessionId),
       agentSetting: agentSettings.get(sessionId),
       mode: modes.get(sessionId) as LogOption['mode'],
+      permissionMode: permissionModes.get(sessionId) as LogOption['permissionMode'],
       prNumber: prNumbers.get(sessionId),
       prUrl: prUrls.get(sessionId),
       prRepository: prRepositories.get(sessionId),

@@ -720,20 +720,19 @@ export function createPathChecker(
       operationTypeOverride,
     )
 
-    // If explicitly denied, respect that (don't override with dangerous path message)
-    if (result.behavior === 'deny') {
-      return result
-    }
-
-    // Check for dangerous removal paths AFTER explicit deny rules but BEFORE other results
-    // This ensures the check runs even if the user has allowlist rules or if glob patterns
-    // were rejected, but respects explicit deny rules. Dangerous patterns get a specific
-    // error message that overrides generic glob pattern rejection messages.
+    // Check for dangerous removal paths BEFORE deny check.
+    // This ensures the check runs even if glob patterns were rejected (deny),
+    // so Focus mode can catch dangerous rm patterns like `rm *` and prompt.
     if (command === 'rm' || command === 'rmdir') {
       const dangerousPathResult = checkDangerousRemovalPaths(command, args, cwd)
       if (dangerousPathResult.behavior !== 'passthrough') {
         return dangerousPathResult
       }
+    }
+
+    // If explicitly denied, respect that (don't override with dangerous path message)
+    if (result.behavior === 'deny') {
+      return result
     }
 
     // If it's a passthrough, return it directly

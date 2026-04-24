@@ -2,6 +2,7 @@ import type { LocalJSXCommandContext } from '../../commands.js'
 import type { LocalJSXCommandOnDone } from '../../types/command.js'
 import type { PermissionMode } from '../../utils/permissions/PermissionMode.js'
 import { permissionModeSymbol } from '../../utils/permissions/PermissionMode.js'
+import { savePermissionMode } from '../../utils/sessionStorage.js'
 import type { AppState } from '../../state/AppState.js'
 
 function setFocusMode(
@@ -16,6 +17,10 @@ function setFocusMode(
       mode: newMode,
     },
   }))
+  // Persist to session transcript so --resume can restore it.
+  // onChangeAppState also triggers this via dynamic import, but we call
+  // directly here to guarantee it fires before any immediate exit.
+  savePermissionMode(newMode)
 }
 
 export async function call(

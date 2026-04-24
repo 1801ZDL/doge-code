@@ -45,9 +45,13 @@ import { isAgentSwarmsEnabled } from '../../utils/agentSwarmsEnabled.js'
 import { logForDebugging } from '../../utils/debug.js'
 import { isInProtectedNamespace } from '../../utils/envUtils.js'
 import { AbortError, errorMessage } from '../../utils/errors.js'
-import type { CacheSafeParams } from '../../utils/forkedAgent.js'
-import { lazySchema } from '../../utils/lazySchema.js'
+import { createChildAbortController } from '../../utils/abortController.js'
 import {
+  type CacheSafeParams,
+  createSubagentContext,
+} from '../../utils/forkedAgent.js'
+import {
+  createUserMessage,
   extractTextContent,
   getLastAssistantMessage,
 } from '../../utils/messages.js'
@@ -227,41 +231,6 @@ export function resolveAgentTools(
     allowedAgentTypes,
   }
 }
-
-export const agentToolResultSchema = lazySchema(() =>
-  z.object({
-    agentId: z.string(),
-    // Optional: older persisted sessions won't have this (resume replays
-    // results verbatim without re-validation). Used to gate the sync
-    // result trailer — one-shot built-ins skip the SendMessage hint.
-    agentType: z.string().optional(),
-    content: z.array(z.object({ type: z.literal('text'), text: z.string() })),
-    totalToolUseCount: z.number(),
-    totalDurationMs: z.number(),
-    totalTokens: z.number(),
-    usage: z.object({
-      input_tokens: z.number(),
-      output_tokens: z.number(),
-      cache_creation_input_tokens: z.number().nullable(),
-      cache_read_input_tokens: z.number().nullable(),
-      server_tool_use: z
-        .object({
-          web_search_requests: z.number(),
-          web_fetch_requests: z.number(),
-        })
-        .nullable(),
-      service_tier: z.enum(['standard', 'priority', 'batch']).nullable(),
-      cache_creation: z
-        .object({
-          ephemeral_1h_input_tokens: z.number(),
-          ephemeral_5m_input_tokens: z.number(),
-        })
-        .nullable(),
-    }),
-  }),
-)
-
-export type AgentToolResult = z.input<ReturnType<typeof agentToolResultSchema>>
 
 export function countToolUses(messages: MessageType[]): number {
   let count = 0
@@ -703,5 +672,119 @@ export async function runAsyncAgentLifecycle({
   } finally {
     clearInvokedSkillsForAgent(agentIdForCleanup)
     clearDumpState(agentIdForCleanup)
+  }
+}
+
+/**
+ * Spawn a reader agent to analyze large text content synchronously.
+ * Auto-triggered for tool results > 10KB in coordinator mode.
+ * Yields messages that are injected into the coordinator's stream.
+ */
+export async function* spawnReaderAgent({
+  content,
+  question,
+  toolUseContext,
+  availableTools,
+}: {
+  content: string
+  question: string
+  toolUseContext: ToolUseContext
+  availableTools: Tools
+}): AsyncGenerator<MessageType, void> {
+  // Dynamic import to avoid circular dependency (runAgent.ts imports from agentToolUtils.ts)
+  const { getReaderAgents } = await import(
+    '../../coordinator/workerAgent.js'
+  )
+  const { runAgent } = await import('./runAgent.js')
+
+  const readerDef = getReaderAgents()[0]!
+
+  // Cap content at 100KB
+  const cappedContent = content.slice(0, 100 * 1024)
+
+  const initialMessages: MessageType[] = [
+    createUserMessage({
+      content: [
+        {
+          type: 'text' as const,
+          text: question,
+        },
+        {
+          type: 'text' as const,
+          text: `\n\n--- Content to analyze (${cappedContent.length} chars) ---\n${cappedContent}`,
+        },
+      ],
+    }),
+  ]
+
+  // Create abort controller that is a child of the coordinator's abort controller.
+  // This ensures the reader is aborted when the coordinator is aborted.
+  const abortController = createChildAbortController(toolUseContext.abortController)
+  const agentId = asAgentId(`reader-${Date.now()}`)
+  const startTime = Date.now()
+
+  // Register the reader as a background task in AppState so it appears in
+  // the BackgroundTasksDialog (visible via down-arrow navigation).
+  // Uses registerAsyncAgent (same mechanism as AgentTool) so it shows up
+  // alongside explicitly spawned agents. Dynamic import to avoid circular dependency.
+  const setAppState = toolUseContext.setAppStateForTasks ?? toolUseContext.setAppState
+  if (setAppState) {
+    const { registerAsyncAgent } = await import(
+      '../../tasks/LocalAgentTask/LocalAgentTask.js'
+    )
+    // Use parentAbortController=abortController so the reader's abort controller
+    // is a child of the coordinator's — killing the coordinator kills the reader.
+    registerAsyncAgent({
+      agentId,
+      description: 'Reader: analyzing large output',
+      prompt: question,
+      selectedAgent: readerDef,
+      setAppState,
+      parentAbortController: abortController,
+    })
+  }
+
+  try {
+    for await (const msg of runAgent({
+      agentDefinition: readerDef,
+      promptMessages: initialMessages,
+      toolUseContext: createSubagentContext(toolUseContext, {
+        agentId,
+        abortController,
+      }),
+      canUseTool: () => true,
+      isAsync: false,
+      availableTools,
+      querySource: 'reader-agent',
+      maxTurns: 10,
+      override: {
+        agentId,
+        abortController,
+      },
+    })) {
+      yield msg
+    }
+  } finally {
+    // Mark the reader task as completed in AppState
+    if (setAppState) {
+      const result = {
+        agentId,
+        agentType: readerDef.agentType,
+        content: [{ type: 'text' as const, text: 'Reader analysis complete' }],
+        totalToolUseCount: 0,
+        totalDurationMs: Date.now() - startTime,
+        totalTokens: 0,
+        usage: {
+          input_tokens: 0,
+          output_tokens: 0,
+          cache_creation_input_tokens: null,
+          cache_read_input_tokens: null,
+          server_tool_use: null,
+          service_tier: null,
+          cache_creation: null,
+        },
+      }
+      completeAsyncAgent(result, setAppState)
+    }
   }
 }

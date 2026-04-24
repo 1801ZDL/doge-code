@@ -93,9 +93,11 @@ import { executePostSamplingHooks } from './utils/hooks/postSamplingHooks.js'
 import { executeStopFailureHooks } from './utils/hooks.js'
 import type { QuerySource } from './constants/querySource.js'
 import { createDumpPromptsFetch } from './services/api/dumpPrompts.js'
+import { isCoordinatorMode } from './coordinator/coordinatorMode.js'
 import { StreamingToolExecutor } from './services/tools/StreamingToolExecutor.js'
 import { queryCheckpoint } from './utils/queryProfiler.js'
 import { runTools } from './services/tools/toolOrchestration.js'
+import { spawnReaderAgent } from './tools/AgentTool/agentToolUtils.js'
 import { applyToolResultBudget } from './utils/toolResultStorage.js'
 import { recordContentReplacement } from './utils/sessionStorage.js'
 import { handleStopHooks } from './query/stopHooks.js'
@@ -110,6 +112,7 @@ import {
 } from './bootstrap/state.js'
 import { createBudgetTracker, checkTokenBudget } from './query/tokenBudget.js'
 import { count } from './utils/array.js'
+import { GoalReminderDetector } from './services/goalReminderDetector/goalReminderDetector.js'
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 const snipModule = feature('HISTORY_SNIP')
@@ -145,6 +148,78 @@ function* yieldMissingToolResultBlocks(
         sourceToolAssistantUUID: assistantMessage.uuid,
       })
     }
+  }
+}
+
+/**
+ * Extracts string content from a tool result message.
+ * Handles both tool_result blocks (which have a content array) and text blocks.
+ */
+function extractResultText(result: UserMessage): string {
+  const content = result.message.content
+  if (!Array.isArray(content)) return ''
+  const parts: string[] = []
+  for (const block of content) {
+    if (block.type === 'tool_result') {
+      const inner = block.content
+      if (typeof inner === 'string') {
+        parts.push(inner)
+      } else if (Array.isArray(inner)) {
+        for (const item of inner) {
+          if (item.type === 'text') parts.push(item.text)
+        }
+      }
+    } else if (block.type === 'text') {
+      parts.push(block.text)
+    }
+  }
+  return parts.join('\n')
+}
+
+/**
+ * Runs multiple async generators concurrently and yields messages as they complete.
+ * Used for parallel reader agent spawning in coordinator mode.
+ * Results are yielded in order of completion for maximum parallelism.
+ */
+async function* runMultipleGenerators<T>(
+  generators: AsyncGenerator<T, void, undefined>[],
+): AsyncGenerator<T, void> {
+  if (generators.length === 0) return
+  if (generators.length === 1) {
+    yield* generators[0]!
+    return
+  }
+
+  // Use a queue to collect all yielded items from all generators
+  // Each generator runs concurrently and pushes its items to the queue
+  const queue: T[] = []
+  const completed = new Array(generators.length).fill(false)
+  let hasError: Error | null = null
+
+  // Start all generators concurrently
+  const tasks = generators.map(async (gen, i) => {
+    try {
+      for await (const item of gen) {
+        queue.push(item)
+      }
+    } catch (err) {
+      hasError = err instanceof Error ? err : new Error(String(err))
+    } finally {
+      completed[i] = true
+    }
+  })
+
+  // Wait for all to complete
+  await Promise.all(tasks)
+
+  // Yield all collected results
+  for (const result of queue) {
+    yield result
+  }
+
+  // Propagate any errors after yielding results
+  if (hasError) {
+    throw hasError
   }
 }
 
@@ -278,6 +353,9 @@ async function* queryLoop(
     transition: undefined,
   }
   const budgetTracker = feature('TOKEN_BUDGET') ? createBudgetTracker() : null
+
+  // Goal reminder detector for long-running tasks
+  const goalReminderDetector = new GoalReminderDetector()
 
   // task_budget.remaining tracking across compaction boundaries. Undefined
   // until first compact fires — while context is uncompacted the server can
@@ -555,6 +633,9 @@ async function* queryLoop(
     // Set during streaming whenever a tool_use block arrives — the sole
     // loop-exit signal. If false after streaming, we're done (modulo stop-hook retry).
     const toolUseBlocks: ToolUseBlock[] = []
+    // Collect Read tool calls in coordinator mode for deferred reader agent spawn.
+    // Uses let so each turn iteration gets a fresh array (while(true) loop re-enters block).
+    let coordinatorReadBlocks: ToolUseBlock[] = []
     let needsFollowUp = false
 
     queryCheckpoint('query_setup_start')
@@ -839,7 +920,14 @@ async function* queryLoop(
                 !toolUseContext.abortController.signal.aborted
               ) {
                 for (const toolBlock of msgToolUseBlocks) {
-                  streamingToolExecutor.addTool(toolBlock, message)
+                  // In coordinator mode, intercept Read tools before streaming executor processes them.
+                  // Collect for deferred reader agent spawn instead of executing directly.
+                  // Only intercept on the main thread (no agentId) — subagents should execute Read directly.
+                  if (isCoordinatorMode() && !toolUseContext.agentId && toolBlock.name === 'Read') {
+                    coordinatorReadBlocks.push(toolBlock)
+                  } else {
+                    streamingToolExecutor.addTool(toolBlock, message)
+                  }
                 }
               }
             }
@@ -862,6 +950,26 @@ async function* queryLoop(
             }
           }
           queryCheckpoint('query_api_streaming_end')
+
+          // Goal reminder: inject periodic self-reflection reminders for long-running tasks
+          // Skip for coordinator mode — coordinator manages agents, not self-reflecting
+          if (!isCoordinatorMode()) {
+            goalReminderDetector.recordToolCalls(assistantMessages)
+            if (goalReminderDetector.shouldRemind()) {
+              const reminderText = goalReminderDetector.getReminderMessage()
+              const reminderMessage: UserMessage = {
+                type: 'user',
+                message: {
+                  content: reminderText,
+                },
+                isMeta: true,
+                origin: { kind: 'goal-reminder' },
+              }
+              yield reminderMessage
+              toolResults.push(reminderMessage)
+              goalReminderDetector.acknowledgeReminder()
+            }
+          }
 
           // Yield deferred microcompact boundary message using actual API-reported
           // token deletion count instead of client-side estimates.
@@ -1362,7 +1470,8 @@ async function* queryLoop(
 
     queryCheckpoint('query_tool_execution_start')
 
-
+    // In coordinator mode, force non-streaming tool execution so that Read tool interception
+    // can filter out Read calls and replace them with reader agent spawns.
     if (streamingToolExecutor) {
       logEvent('tengu_streaming_tool_execution_used', {
         tool_count: toolUseBlocks.length,
@@ -1377,9 +1486,73 @@ async function* queryLoop(
       })
     }
 
+    // Coordinator mode: intercept Read tool calls and replace with reader agent spawns.
+    // Non-streaming: filter Read blocks from toolUseBlocks and spawn readers BEFORE running other tools.
+    // Streaming: Read blocks were collected in coordinatorReadBlocks during the stream.
+    // Only intercept on the main thread (no agentId) — subagents should execute Read directly.
+    const readBlocks = isCoordinatorMode() && !toolUseContext.agentId && !streamingToolExecutor
+      ? toolUseBlocks.filter(b => b.name === 'Read')
+      : []
+    // Collect IDs of Read blocks already intercepted for reader agent spawn (streaming path)
+    const interceptedReadIds = new Set(coordinatorReadBlocks.map(b => b.id))
+    // allReadBlocks: Read blocks to spawn reader agents for
+    // - Streaming: use coordinatorReadBlocks (collected during stream)
+    // - Non-streaming: use readBlocks (filtered above)
+    const allReadBlocks = streamingToolExecutor
+      ? coordinatorReadBlocks
+      : readBlocks
+    // nonReadBlocks: blocks to execute via normal tool execution
+    // - Streaming: exclude Read blocks already intercepted AND already added to streaming executor
+    // - Non-streaming: exclude Read blocks (they go to reader agents instead)
+    const nonReadBlocks = streamingToolExecutor
+      ? toolUseBlocks.filter(b => b.name !== 'Read' && !interceptedReadIds.has(b.id))
+      : (readBlocks.length > 0
+          ? toolUseBlocks.filter(b => b.name !== 'Read')
+          : toolUseBlocks)
+
+    // Spawn reader agents for intercepted Read calls, with fallback to normal execution on failure.
+    if (allReadBlocks.length > 0) {
+      logEvent('tengu_reader_intercept', {
+        count: allReadBlocks.length,
+        queryChainId: queryChainIdForAnalytics,
+        queryDepth: queryTracking.depth,
+      })
+      try {
+        const readerGenerators: AsyncGenerator<MessageType, void>[] = []
+        for (const block of allReadBlocks) {
+          const input = block.input as Record<string, unknown> | undefined
+          const filePath = input?.file_path as string | undefined
+          try {
+            const gen = spawnReaderAgent({
+              content: `File path: ${filePath ?? 'unknown'}`,
+              question: `Read the file at "${filePath}" and summarize: what does it contain? Be concise (max 150 words). Highlight key findings, errors, or patterns.`,
+              toolUseContext: updatedToolUseContext,
+              availableTools: toolUseContext.options.tools,
+            })
+            readerGenerators.push(gen)
+          } catch (err) {
+            // Fallback: if reader agent fails to spawn, execute Read normally
+            logForDebugging(`[READER_FALLBACK] ${err}`)
+            nonReadBlocks.push(block)
+          }
+        }
+        for await (const msg of runMultipleGenerators(readerGenerators)) {
+          yield { message: msg }
+        }
+      } catch (err) {
+        logForDebugging(`[READER_ERROR] ${err}`)
+        // On error, fall through to normal execution of nonReadBlocks
+      }
+    }
+
+    // DEBUG: Log coordinator read interception state
+    if (isCoordinatorMode() && coordinatorReadBlocks.length > 0) {
+      process.stderr.write(`[DEBUG_READ_INTERCEPT] streamingToolExecutor=${!!streamingToolExecutor} coordinatorReadBlocks=${coordinatorReadBlocks.length} toolUseBlocks=${toolUseBlocks.length} nonReadBlocks=${nonReadBlocks.length}\n`)
+    }
+
     const toolUpdates = streamingToolExecutor
       ? streamingToolExecutor.getRemainingResults()
-      : runTools(toolUseBlocks, assistantMessages, canUseTool, toolUseContext)
+      : runTools(nonReadBlocks, assistantMessages, canUseTool, toolUseContext)
 
     for await (const update of toolUpdates) {
       if (update.message) {
@@ -1407,6 +1580,34 @@ async function* queryLoop(
       }
     }
     queryCheckpoint('query_tool_execution_end')
+
+    // Long output auto-reader: in coordinator mode, if any non-Read tool result exceeds 10KB
+    // (e.g. large Grep/Bash output), spawn a reader to analyze it and inject findings.
+    // Note: Read tools are already intercepted pre-execution, so they won't appear here.
+    // Only auto-spawn on the main thread (no agentId) — subagents handle their own output.
+    if (isCoordinatorMode() && !toolUseContext.agentId) {
+      for (const result of toolResults) {
+        if (result.type !== 'user') continue
+        const content = extractResultText(result)
+        if (content.length > 10 * 1024) {
+          logEvent('tengu_reader_auto_spawn', {
+            size: content.length,
+            queryChainId: queryChainIdForAnalytics,
+            queryDepth: queryTracking.depth,
+          })
+          for await (const msg of spawnReaderAgent({
+            content,
+            question:
+              'Analyze this tool output. Identify key errors, warnings, and relevant patterns. Answer: what does this output tell us? Be concise — max 200 words.',
+            toolUseContext: updatedToolUseContext,
+            availableTools: toolUseContext.options.tools,
+          })) {
+            yield { message: msg }
+          }
+          break // Only spawn one reader per turn
+        }
+      }
+    }
 
     // Generate tool use summary after tool batch completes — passed to next recursive call
     let nextPendingToolUseSummary:

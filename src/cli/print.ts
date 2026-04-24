@@ -353,11 +353,17 @@ import { errorMessage, toError } from '../utils/errors.js'
 import { sleep } from '../utils/sleep.js'
 import { isExtractModeActive } from '../memdir/paths.js'
 
-// Dead code elimination: conditional imports
+// Conditional imports — bypass feature flag for COORDINATOR_MODE.
+// When running unbundled (bun run), feature() returns false even though
+// CLAUDE_CODE_COORDINATOR_MODE may be set.
 /* eslint-disable @typescript-eslint/no-require-imports */
-const coordinatorModeModule = feature('COORDINATOR_MODE')
-  ? (require('../coordinator/coordinatorMode.js') as typeof import('../coordinator/coordinatorMode.js'))
-  : null
+const coordinatorModeModule = (() => {
+  try {
+    return require('../coordinator/coordinatorMode.js') as typeof import('../coordinator/coordinatorMode.js')
+  } catch {
+    return null
+  }
+})()
 const proactiveModule =
   feature('PROACTIVE') || feature('KAIROS')
     ? (require('../proactive/index.js') as typeof import('../proactive/index.js'))
@@ -1058,6 +1064,12 @@ function runHeadlessStreaming(
   // notifySessionMetadataChanged, both of which onChangeAppState now covers);
   // keeping it would double-emit status messages.
   setPermissionModeChangedListener(newMode => {
+    // Persist permission mode to session so --resume can restore it.
+    // Import dynamically to avoid pulling sessionStorage into the SDK module graph.
+    import('./utils/sessionStorage.js').then(({ savePermissionMode }) => {
+      savePermissionMode(newMode)
+    }).catch(() => {})
+
     // Only emit for SDK-exposed modes.
     if (
       newMode === 'default' ||
@@ -4916,7 +4928,7 @@ async function loadInitialMessages(
       )
       if (result) {
         // Match coordinator mode to the resumed session's mode
-        if (feature('COORDINATOR_MODE') && coordinatorModeModule) {
+        if (coordinatorModeModule) {
           const warning = coordinatorModeModule.matchSessionMode(result.mode)
           if (warning) {
             process.stderr.write(warning + '\n')
@@ -4965,7 +4977,7 @@ async function loadInitialMessages(
         )
 
         // Write mode entry for the resumed session
-        if (feature('COORDINATOR_MODE') && coordinatorModeModule) {
+        if (coordinatorModeModule) {
           saveMode(
             coordinatorModeModule.isCoordinatorMode()
               ? 'coordinator'
@@ -5121,7 +5133,7 @@ async function loadInitialMessages(
       }
 
       // Match coordinator mode to the resumed session's mode
-      if (feature('COORDINATOR_MODE') && coordinatorModeModule) {
+      if (coordinatorModeModule) {
         const warning = coordinatorModeModule.matchSessionMode(result.mode)
         if (warning) {
           process.stderr.write(warning + '\n')
@@ -5165,7 +5177,7 @@ async function loadInitialMessages(
       )
 
       // Write mode entry for the resumed session
-      if (feature('COORDINATOR_MODE') && coordinatorModeModule) {
+      if (coordinatorModeModule) {
         saveMode(
           coordinatorModeModule.isCoordinatorMode() ? 'coordinator' : 'normal',
         )

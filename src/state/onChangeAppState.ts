@@ -89,6 +89,12 @@ export function onChangeAppState({
       })
     }
     notifyPermissionModeChanged(newMode)
+
+    // Persist permission mode to session transcript so --resume can restore it.
+    // Dynamic import to avoid circular dependency (sessionStorage → AppState).
+    import('../utils/sessionStorage.js')
+      .then(({ savePermissionMode }) => savePermissionMode(newMode))
+      .catch(() => {})
   }
 
   // mainLoopModel: remove it from settings?

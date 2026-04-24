@@ -472,6 +472,7 @@ export async function loadConversationForResume(
   customTitle?: string
   tag?: string
   mode?: 'coordinator' | 'normal'
+  permissionMode?: LogOption['permissionMode']
   worktreeSession?: PersistedWorktreeSession | null
   prNumber?: number
   prUrl?: string
@@ -583,6 +584,7 @@ export async function loadConversationForResume(
       customTitle: log?.customTitle,
       tag: log?.tag,
       mode: log?.mode,
+      permissionMode: log?.permissionMode,
       worktreeSession: log?.worktreeSession,
       prNumber: log?.prNumber,
       prUrl: log?.prUrl,

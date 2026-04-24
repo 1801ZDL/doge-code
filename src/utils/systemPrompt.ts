@@ -59,8 +59,8 @@ export function buildEffectiveSystemPrompt({
   // Coordinator mode: use coordinator prompt instead of default
   // Use inline env check instead of coordinatorModule to avoid circular
   // dependency issues during test module loading.
+  // Bypass feature flag — when running unbundled (bun run), feature() returns false.
   if (
-    feature('COORDINATOR_MODE') &&
     isEnvTruthy(process.env.CLAUDE_CODE_COORDINATOR_MODE) &&
     !mainThreadAgentDefinition
   ) {
@@ -69,7 +69,7 @@ export function buildEffectiveSystemPrompt({
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       require('../coordinator/coordinatorMode.js') as typeof import('../coordinator/coordinatorMode.js')
     return asSystemPrompt([
-      getCoordinatorSystemPrompt(),
+      getCoordinatorSystemPrompt(toolUseContext.options.agentDefinitions),
       ...(appendSystemPrompt ? [appendSystemPrompt] : []),
     ])
   }

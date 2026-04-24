@@ -48,6 +48,7 @@ export type LogOption = {
   prUrl?: string // Full URL to the linked PR
   prRepository?: string // Repository in "owner/repo" format
   mode?: 'coordinator' | 'normal' // Session mode for coordinator/normal detection
+  permissionMode?: 'focus' | 'default' | 'yolo' | 'plan' | 'acceptEdits' | 'bypassPermissions' // Permission mode for focus/default/etc detection
   worktreeSession?: PersistedWorktreeSession | null // Worktree state at session end (null = exited, undefined = never entered)
   contentReplacements?: ContentReplacementRecord[] // Replacement decisions for resume reconstruction
 }
@@ -138,6 +139,16 @@ export type ModeEntry = {
   type: 'mode'
   sessionId: UUID
   mode: 'coordinator' | 'normal'
+}
+
+/**
+ * Permission mode (focus/default/yolo/etc) persisted to the transcript for resume.
+ * Separate from ModeEntry because coordinator/normal and permission modes are orthogonal.
+ */
+export type PermissionModeEntry = {
+  type: 'permission-mode'
+  sessionId: UUID
+  permissionMode: 'focus' | 'default' | 'yolo' | 'plan' | 'acceptEdits' | 'bypassPermissions'
 }
 
 /**
@@ -311,6 +322,7 @@ export type Entry =
   | QueueOperationMessage
   | SpeculationAcceptMessage
   | ModeEntry
+  | PermissionModeEntry
   | WorktreeStateEntry
   | ContentReplacementEntry
   | ContextCollapseCommitEntry

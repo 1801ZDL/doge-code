@@ -79,15 +79,11 @@ export function CoordinatorTaskPanel(): React.ReactNode {
  * Returns the number of visible coordinator tasks (for selection bounds).
  * The panel's 1s tick evicts expired tasks from prev.tasks, so this count
  * stays accurate without needing its own tick.
+ * Returns visible agent tasks count + 1 for the "main" row.
  */
-export function useCoordinatorTaskCount() {
-  const tasks = useAppState(_temp);
-  let t0;
-  t0 = 0;
-  return t0;
-}
-function _temp(s) {
-  return s.tasks;
+export function useCoordinatorTaskCount(): number {
+  const tasks = useAppState(s => s.tasks);
+  return getVisibleAgentTasks(tasks).length + 1;
 }
 function MainLine(t0) {
   const $ = _c(10);

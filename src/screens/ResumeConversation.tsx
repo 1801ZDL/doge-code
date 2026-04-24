@@ -192,7 +192,8 @@ export function ResumeConversation({
       if (!result_3) {
         throw new Error('Failed to load conversation');
       }
-      if (feature('COORDINATOR_MODE')) {
+      // Bypass feature flag — when running unbundled (bun run), feature() returns false.
+      {
         /* eslint-disable @typescript-eslint/no-require-imports */
         const coordinatorModule = require('../coordinator/coordinatorMode.js') as typeof import('../coordinator/coordinatorMode.js');
         /* eslint-enable @typescript-eslint/no-require-imports */
@@ -232,7 +233,8 @@ export function ResumeConversation({
         ...prev_1,
         agent: resolvedAgentDef?.agentType
       }));
-      if (feature('COORDINATOR_MODE')) {
+      // Bypass feature flag — when running unbundled (bun run), feature() returns false.
+      {
         /* eslint-disable @typescript-eslint/no-require-imports */
         const {
           saveMode

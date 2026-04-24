@@ -752,8 +752,8 @@ export function normalizeMessages(messages: Message[]): NormalizedMessage[] {
         isNewChain = isNewChain || message.message.content.length > 1
         return message.message.content.map((_, index) => {
           const uuid = isNewChain
-            ? deriveUUID(message.uuid, index)
-            : message.uuid
+            ? deriveUUID(message.uuid || randomUUID(), index)
+            : (message.uuid ?? randomUUID())
           return {
             type: 'assistant' as const,
             timestamp: message.timestamp,
@@ -780,7 +780,7 @@ export function normalizeMessages(messages: Message[]): NormalizedMessage[] {
         return [message]
       case 'user': {
         if (typeof message.message.content === 'string') {
-          const uuid = isNewChain ? deriveUUID(message.uuid, 0) : message.uuid
+          const uuid = isNewChain ? deriveUUID(message.uuid || randomUUID(), 0) : (message.uuid ?? randomUUID())
           return [
             {
               ...message,
@@ -814,7 +814,7 @@ export function normalizeMessages(messages: Message[]): NormalizedMessage[] {
               imagePasteIds: imageId !== undefined ? [imageId] : undefined,
               origin: message.origin,
             }),
-            uuid: isNewChain ? deriveUUID(message.uuid, index) : message.uuid,
+            uuid: isNewChain ? deriveUUID(message.uuid || randomUUID(), index) : (message.uuid ?? randomUUID()),
           } as NormalizedMessage
         })
       }

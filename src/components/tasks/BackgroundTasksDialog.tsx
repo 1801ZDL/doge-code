@@ -19,6 +19,7 @@ import type { LocalWorkflowTaskState } from 'src/tasks/LocalWorkflowTask/LocalWo
 import type { MonitorMcpTaskState } from 'src/tasks/MonitorMcpTask/MonitorMcpTask.js';
 import { RemoteAgentTask, type RemoteAgentTaskState } from 'src/tasks/RemoteAgentTask/RemoteAgentTask.js';
 import { type BackgroundTaskState, isBackgroundTask, type TaskState } from 'src/tasks/types.js';
+import { PANEL_GRACE_MS } from 'src/utils/task/framework.js';
 import type { DeepImmutable } from 'src/types/utils.js';
 import { intersperse } from 'src/utils/array.js';
 import { TEAM_LEAD_NAME } from 'src/utils/swarm/constants.js';
@@ -120,8 +121,21 @@ const MonitorMcpDetailDialog = feature('MONITOR_TOOL') ? (require('./MonitorMcpD
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 // Helper to get filtered background tasks (excludes foregrounded local_agent)
+// Also includes recently-completed tasks within grace period so they're visible
+// even if they finished fast (e.g., reader agents completing in <2s).
 function getSelectableBackgroundTasks(tasks: Record<string, TaskState> | undefined, foregroundedTaskId: string | undefined): TaskState[] {
-  const backgroundTasks = Object.values(tasks ?? {}).filter(isBackgroundTask);
+  const now = Date.now();
+  const allTasks = Object.values(tasks ?? {});
+  const backgroundTasks = allTasks.filter(task => {
+    // Standard background task check (running/pending)
+    if (isBackgroundTask(task)) return true;
+    // Include recently-completed/failed/killed tasks within grace period
+    // This ensures fast-executing agents (like reader agents) are visible
+    if ('evictAfter' in task && task.evictAfter && task.evictAfter > now) {
+      return true;
+    }
+    return false;
+  });
   return backgroundTasks.filter(task => !(task.type === 'local_agent' && task.id === foregroundedTaskId));
 }
 export function BackgroundTasksDialog({

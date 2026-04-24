@@ -112,11 +112,19 @@ const useFrustrationDetection: typeof import('../components/FeedbackSurvey/useFr
 // eliminated from external builds (one UUID is on excluded-strings).
 const useAntOrgWarningNotification: typeof import('../hooks/notifs/useAntOrgWarningNotification.js').useAntOrgWarningNotification = "external" === 'ant' ? require('../hooks/notifs/useAntOrgWarningNotification.js').useAntOrgWarningNotification : () => {};
 // Dead code elimination: conditional import for coordinator mode
+// Bypass feature flag — when running unbundled (bun run), feature() returns false.
+const coordinatorModeModule = (() => {
+  try {
+    return require('../coordinator/coordinatorMode.js') as typeof import('../coordinator/coordinatorMode.js')
+  } catch {
+    return null
+  }
+})()
 const getCoordinatorUserContext: (mcpClients: ReadonlyArray<{
   name: string;
 }>, scratchpadDir?: string) => {
   [k: string]: string;
-} = feature('COORDINATOR_MODE') ? require('../coordinator/coordinatorMode.js').getCoordinatorUserContext : () => ({});
+} = coordinatorModeModule ? coordinatorModeModule.getCoordinatorUserContext : () => ({});
 /* eslint-enable custom-rules/no-process-env-top-level, @typescript-eslint/no-require-imports */
 import useCanUseTool from '../hooks/useCanUseTool.js';
 import type { ToolPermissionContext, Tool } from '../Tool.js';
@@ -1772,7 +1780,8 @@ export function REPL({
       const messages = deserializeMessages(log.messages);
 
       // Match coordinator/normal mode to the resumed session
-      if (feature('COORDINATOR_MODE')) {
+      // Bypass feature flag — when running unbundled (bun run), feature() returns false.
+      {
         /* eslint-disable @typescript-eslint/no-require-imports */
         const coordinatorModule = require('../coordinator/coordinatorMode.js') as typeof import('../coordinator/coordinatorMode.js');
         /* eslint-enable @typescript-eslint/no-require-imports */
@@ -1924,7 +1933,8 @@ export function REPL({
       }
 
       // Persist the current mode so future resumes know what mode this session was in
-      if (feature('COORDINATOR_MODE')) {
+      // Bypass feature flag — when running unbundled (bun run), feature() returns false.
+      {
         /* eslint-disable @typescript-eslint/no-require-imports */
         const {
           saveMode
@@ -2804,7 +2814,7 @@ export function REPL({
     feature('TRANSCRIPT_CLASSIFIER') ? checkAndDisableAutoModeIfNeeded(toolPermissionContext, setAppState, store.getState().fastMode) : undefined, getSystemPrompt(freshTools, mainLoopModelParam, Array.from(toolPermissionContext.additionalWorkingDirectories.keys()), freshMcpClients), getUserContext(), getSystemContext()]);
     const userContext = {
       ...baseUserContext,
-      ...getCoordinatorUserContext(freshMcpClients, isScratchpadEnabled() ? getScratchpadDir() : undefined),
+      ...getCoordinatorUserContext(freshMcpClients, toolUseContext.options.agentDefinitions, isScratchpadEnabled() ? getScratchpadDir() : undefined),
       ...((feature('PROACTIVE') || feature('KAIROS')) && proactiveModule?.isProactiveActive() && !terminalFocusRef.current ? {
         terminalFocus: 'The terminal is unfocused \u2014 the user is not actively watching.'
       } : {})

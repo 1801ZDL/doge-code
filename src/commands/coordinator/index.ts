@@ -5,7 +5,7 @@ const coordinator = {
   type: 'local-jsx',
   name: 'coordinator',
   aliases: ['coord'],
-  description: 'Toggle coordinator mode — orchestrate multiple worker agents',
+  description: 'Toggle commander mode — orchestrate agents from ~/.doge/agents with acceptance',
   argumentHint: '[on|off|toggle]',
   get immediate() {
     return shouldInferenceConfigCommandBeImmediate()

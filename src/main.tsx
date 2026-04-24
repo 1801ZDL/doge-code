@@ -71,9 +71,17 @@ const getTeammateUtils = () => require('./utils/teammate.js') as typeof import('
 const getTeammatePromptAddendum = () => require('./utils/swarm/teammatePromptAddendum.js') as typeof import('./utils/swarm/teammatePromptAddendum.js');
 const getTeammateModeSnapshot = () => require('./utils/swarm/backends/teammateModeSnapshot.js') as typeof import('./utils/swarm/backends/teammateModeSnapshot.js');
 /* eslint-enable @typescript-eslint/no-require-imports */
-// Dead code elimination: conditional import for COORDINATOR_MODE
+// Conditional import for COORDINATOR_MODE.
+// Bypass feature flag — when running unbundled (bun run), feature() returns false
+// even though CLAUDE_CODE_COORDINATOR_MODE may be set.
 /* eslint-disable @typescript-eslint/no-require-imports */
-const coordinatorModeModule = feature('COORDINATOR_MODE') ? require('./coordinator/coordinatorMode.js') as typeof import('./coordinator/coordinatorMode.js') : null;
+const coordinatorModeModule = (() => {
+  try {
+    return require('./coordinator/coordinatorMode.js') as typeof import('./coordinator/coordinatorMode.js')
+  } catch {
+    return null
+  }
+})()
 /* eslint-enable @typescript-eslint/no-require-imports */
 // Dead code elimination: conditional import for KAIROS (assistant mode)
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -1875,7 +1883,9 @@ async function run(): Promise<CommanderCommand> {
 
     // Apply coordinator mode tool filtering for headless path
     // (mirrors useMergedTools.ts filtering for REPL/interactive path)
-    if (feature('COORDINATOR_MODE') && isEnvTruthy(process.env.CLAUDE_CODE_COORDINATOR_MODE)) {
+    // Bypass feature flag check — when running unbundled (bun run),
+    // feature('COORDINATOR_MODE') is false even though the env var is set.
+    if (isEnvTruthy(process.env.CLAUDE_CODE_COORDINATOR_MODE)) {
       const {
         applyCoordinatorToolFilter
       } = await import('./utils/toolPool.js');
@@ -3773,9 +3783,8 @@ async function run(): Promise<CommanderCommand> {
       maybeActivateProactive(options);
       maybeActivateBrief(options);
       // Persist the current mode for fresh sessions so future resumes know what mode was used
-      if (feature('COORDINATOR_MODE')) {
-        saveMode(coordinatorModeModule?.isCoordinatorMode() ? 'coordinator' : 'normal');
-      }
+      // Bypass feature flag — when running unbundled (bun run), feature() returns false.
+      saveMode(coordinatorModeModule?.isCoordinatorMode() ? 'coordinator' : 'normal');
 
       // If launched via a deep link, show a provenance banner so the user
       // knows the session originated externally. Linux xdg-open and
@@ -4596,7 +4605,7 @@ async function logTenguInit({
         appendSystemPromptFlag: appendSystemPromptFlag as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
       }),
       is_simple: isBareMode() || undefined,
-      is_coordinator: feature('COORDINATOR_MODE') && coordinatorModeModule?.isCoordinatorMode() ? true : undefined,
+      is_coordinator: isEnvTruthy(process.env.CLAUDE_CODE_COORDINATOR_MODE) ? true : undefined,
       ...(assistantActivationPath && {
         assistantActivationPath: assistantActivationPath as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
       }),
