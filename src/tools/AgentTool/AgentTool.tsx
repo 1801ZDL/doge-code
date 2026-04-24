@@ -687,6 +687,34 @@ export const AgentTool = buildTool({
       };
     };
     if (shouldRunAsync) {
+      // In coordinator mode, use teammate infrastructure for real-time communication.
+      // This gives us waitForNextPromptOrShutdown polling so Commander can
+      // send messages to agents and agents can respond.
+      if (isCoordinator) {
+        // Use spawnTeammate which creates InProcessTeammateTask with
+        // inProcessRunner - has waitForNextPromptOrShutdown built in
+        const result = await spawnTeammate({
+          name: name || `worker-${Date.now()}`,
+          prompt,
+          agent_type: selectedAgent.agentType,
+          description,
+          model,
+        }, toolUseContext);
+
+        return {
+          data: {
+            isAsync: true as const,
+            status: 'async_launched' as const,
+            agentId: result.data.agent_id,
+            description: description,
+            prompt: prompt,
+            outputFile: getTaskOutputPath(result.data.agent_id),
+            canReadOutputFile: toolUseContext.options.tools.some(t => toolMatchesName(t, FILE_READ_TOOL_NAME) || toolMatchesName(t, BASH_TOOL_NAME)),
+          }
+        };
+      }
+
+      // Non-coordinator async agents use the original LocalAgentTask path
       const asyncAgentId = earlyAgentId;
       const agentBackgroundTask = registerAsyncAgent({
         agentId: asyncAgentId,
