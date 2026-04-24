@@ -31,7 +31,7 @@ import {
 } from '../../services/compact/compact.js'
 import { resetMicrocompactState } from '../../services/compact/microCompact.js'
 import type { AppState } from '../../state/AppState.js'
-import type { Tool, ToolUseContext } from '../../Tool.js'
+import type { Tool, Tools, ToolUseContext } from '../../Tool.js'
 import { appendTeammateMessage } from '../../tasks/InProcessTeammateTask/InProcessTeammateTask.js'
 import type {
   InProcessTeammateTaskState,
@@ -514,6 +514,10 @@ export type InProcessRunnerConfig = {
   /** Whether this teammate can show permission prompts for unlisted tools.
    * When false (default), unlisted tools are auto-denied. */
   allowPermissionPrompts?: boolean
+  /** Precomputed tool pool for the worker agent. When provided, overrides
+   * toolUseContext.options.tools. Should contain the full tool pool for the worker,
+   * independent of the parent's tool restrictions. */
+  availableTools?: Tools
   /** Short description of the task (used as summary for the initial prompt header) */
   description?: string
   /** request_id of the API call that spawned this teammate, for lineage
@@ -1220,7 +1224,7 @@ export async function runInProcessTeammate(
             override: { abortController: currentWorkAbortController },
             model: model as ModelAlias | undefined,
             preserveToolUseResults: true,
-            availableTools: toolUseContext.options.tools,
+            availableTools: config.availableTools ?? toolUseContext.options.tools,
             allowedTools,
             contentReplacementState: teammateReplacementState,
           })) {

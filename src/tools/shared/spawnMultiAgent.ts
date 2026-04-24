@@ -15,6 +15,7 @@ import {
 import type { AppState } from '../../state/AppState.js'
 import { createTaskStateBase, generateTaskId } from '../../Task.js'
 import type { ToolUseContext } from '../../Tool.js'
+import { assembleToolPool } from '../../tools.js'
 import type { InProcessTeammateTaskState } from '../../tasks/InProcessTeammateTask/types.js'
 import { formatAgentId } from '../../utils/agentId.js'
 import { quote } from '../../utils/bash/shellQuote.js'
@@ -951,6 +952,13 @@ async function handleSpawnInProcess(
 
   // Start the agent execution loop (fire-and-forget)
   if (result.taskId && result.teammateContext && result.abortController) {
+    // Get the full tool pool for the worker, not the filtered coordinator tools.
+    // The worker's tool permissions will be applied by filterToolsForAgent in runAgent.
+    const workerTools = assembleToolPool(
+      appState.toolPermissionContext,
+      appState.mcp.tools,
+    )
+
     startInProcessTeammate({
       identity: {
         agentId: teammateId,
@@ -973,6 +981,7 @@ async function handleSpawnInProcess(
       toolUseContext: { ...context, messages: [] },
       abortController: result.abortController,
       invokingRequestId: input.invokingRequestId,
+      availableTools: workerTools,
     })
     logForDebugging(
       `[handleSpawnInProcess] Started agent execution for ${teammateId}`,
