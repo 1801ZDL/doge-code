@@ -78,6 +78,7 @@ import {
   applyPermissionUpdates,
   persistPermissionUpdates,
 } from '../permissions/PermissionUpdate.js'
+import { isEnvTruthy } from '../envUtils.js'
 import type { PermissionUpdate } from '../permissions/PermissionUpdateSchema.js'
 import { hasPermissionsToUseTool } from '../permissions/permissions.js'
 import { emitTaskTerminatedSdk } from '../sdkEventQueue.js'
@@ -151,6 +152,14 @@ function createInProcessCanUseTool(
     // Pass through allow/deny decisions directly
     if (result.behavior !== 'ask') {
       return result
+    }
+
+    // In coordinator mode, auto-allow all tools to avoid permission deadlock.
+    // Workers are spawned by Commander and run autonomously - Commander doesn't
+    // poll mailbox to respond to permission requests, so we skip permission checks.
+    if (isEnvTruthy(process.env.CLAUDE_CODE_COORDINATOR_MODE)) {
+      logForDebugging(`[createInProcessCanUseTool] Coordinator mode: auto-allowing ${tool.name}`)
+      return { behavior: 'allow' }
     }
 
     // For bash commands, try classifier auto-approval before showing leader dialog.
