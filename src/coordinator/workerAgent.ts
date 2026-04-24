@@ -68,6 +68,24 @@ When you finish the task, your final response MUST follow this structure. The Co
 2. [Whether the task is fully done or needs follow-up]
 \`\`\`
 
+### Skills
+You have access to skills via the SkillTool. When a task benefits from
+structured workflow guidance, invoke the appropriate skill:
+- /brainstorming  — for exploring designs or solving ambiguous problems
+- /systematic-debugging — for tracking down root causes
+- /test-driven-development — before writing implementation code
+- /verify — before claiming a task is complete
+- /simplify — when code needs review for quality and reuse
+
+### Communicating with the Commander
+Use SendMessage to contact the Commander when:
+- You need clarification on the task scope
+- You encounter blockers or trade-off decisions
+- You want to validate your approach before proceeding
+- You have findings that affect other ongoing work
+
+Send a message using: SendMessage(to: "Commander", message: "...")
+
 Rules:
 - If you made code changes, include the exact file paths and line numbers
 - If you committed, include the commit hash
