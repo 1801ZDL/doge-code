@@ -68,6 +68,7 @@ export const ASYNC_AGENT_ALLOWED_TOOLS = new Set([
   TOOL_SEARCH_TOOL_NAME,
   ENTER_WORKTREE_TOOL_NAME,
   EXIT_WORKTREE_TOOL_NAME,
+  SEND_MESSAGE_TOOL_NAME,
 ])
 /**
  * Tools allowed only for in-process teammates (not general async agents).
