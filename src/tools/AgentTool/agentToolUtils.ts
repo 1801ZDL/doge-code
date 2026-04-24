@@ -191,6 +191,7 @@ export function resolveAgentTools(
   const resolved: Tool[] = []
   const resolvedToolsSet = new Set<Tool>()
   let allowedAgentTypes: string[] | undefined
+  let sendMessageResolvedFromExplicitList = false
 
   for (const toolSpec of agentTools) {
     // Parse the tool spec to extract the base tool name and any permission pattern
@@ -214,6 +215,9 @@ export function resolveAgentTools(
 
     const tool = availableToolMap.get(toolName)
     if (tool) {
+      if (tool.name === SEND_MESSAGE_TOOL_NAME) {
+        sendMessageResolvedFromExplicitList = true
+      }
       validTools.push(toolSpec)
       if (!resolvedToolsSet.has(tool)) {
         resolved.push(tool)
@@ -230,12 +234,12 @@ export function resolveAgentTools(
   // communicate with the Commander.
   if (
     isEnvTruthy(process.env.CLAUDE_CODE_COORDINATOR_MODE) &&
-    !resolvedToolsSet.has(SEND_MESSAGE_TOOL_NAME)
+    !sendMessageResolvedFromExplicitList
   ) {
     const sendMessageTool = availableToolMap.get(SEND_MESSAGE_TOOL_NAME)
     if (sendMessageTool) {
       resolved.push(sendMessageTool)
-      resolvedToolsSet.add(SEND_MESSAGE_TOOL_NAME)
+      resolvedToolsSet.add(sendMessageTool)
     }
   }
 
