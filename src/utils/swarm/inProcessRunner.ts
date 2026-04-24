@@ -1308,10 +1308,13 @@ export async function runInProcessTeammate(
       logForDebugging(`[inProcessRunner] ${identity.agentId} runAgent loop ended, workWasAborted=${workWasAborted}`)
 
       // Check if lifecycle aborted during agent run (kills whole teammate)
+      console.error(`[DEBUG] ${identity.agentId} runAgent loop ended, checking abort state`)
       if (abortController.signal.aborted) {
+        console.error(`[DEBUG] ${identity.agentId} abortController is aborted, exiting loop`)
         break
       }
 
+      console.error(`[DEBUG] ${identity.agentId} workWasAborted=${workWasAborted}, proceeding to idle`)
       // If work was aborted (Escape), log it and add interrupt message, then continue to idle state
       if (workWasAborted) {
         logForDebugging(
@@ -1348,6 +1351,9 @@ export async function runInProcessTeammate(
         },
         setAppState,
       )
+
+      // Add debug message to task so it appears in transcript
+      console.error(`[DEBUG] ${identity.agentId} entering idle state, waiting for messages...`)
 
       // Note: We do NOT automatically send the teammate's response to the leader.
       // Teammates should use the Teammate tool to communicate with the leader.
