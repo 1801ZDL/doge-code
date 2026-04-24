@@ -1374,15 +1374,21 @@ export async function runInProcessTeammate(
 
       // Only send idle notification on transition to idle (not if already idle)
       if (!wasAlreadyIdle) {
-        await sendIdleNotification(
-          identity.agentName,
-          identity.color,
-          identity.teamName,
-          {
-            idleReason: workWasAborted ? 'interrupted' : 'available',
-            summary: getLastPeerDmSummary(allMessages),
-          },
-        )
+        appendDebugLog(`${identity.agentId} sending idle notification to leader`)
+        try {
+          await sendIdleNotification(
+            identity.agentName,
+            identity.color,
+            identity.teamName,
+            {
+              idleReason: workWasAborted ? 'interrupted' : 'available',
+              summary: getLastPeerDmSummary(allMessages),
+            },
+          )
+          appendDebugLog(`${identity.agentId} idle notification sent successfully`)
+        } catch (e) {
+          appendDebugLog(`${identity.agentId} idle notification FAILED: ${e}`)
+        }
       } else {
         logForDebugging(
           `[inProcessRunner] Skipping duplicate idle notification for ${identity.agentName}`,
@@ -1393,6 +1399,7 @@ export async function runInProcessTeammate(
         `[inProcessRunner] ${identity.agentId} finished prompt, waiting for next`,
       )
 
+      appendDebugLog(`${identity.agentId} NOW CALLING waitForNextPromptOrShutdown - will poll for messages`)
       // Wait for next message or shutdown
       const waitResult = await waitForNextPromptOrShutdown(
         identity,
@@ -1402,6 +1409,7 @@ export async function runInProcessTeammate(
         setAppState,
         identity.parentSessionId,
       )
+      appendDebugLog(`${identity.agentId} waitForNextPromptOrShutdown returned: ${waitResult.type}`)
 
       switch (waitResult.type) {
         case 'shutdown_request':
