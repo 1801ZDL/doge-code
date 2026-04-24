@@ -693,12 +693,15 @@ export const AgentTool = buildTool({
       if (isCoordinator) {
         // Use spawnTeammate which creates InProcessTeammateTask with
         // inProcessRunner - has waitForNextPromptOrShutdown built in
+        // Use a default team name for coordinator mode since there's no explicit team
+        const teamName = toolUseContext.options.teamName || 'commander-team'
         const result = await spawnTeammate({
           name: name || `worker-${Date.now()}`,
           prompt,
           agent_type: selectedAgent.agentType,
           description,
           model,
+          team_name: teamName,
         }, toolUseContext);
 
         return {
