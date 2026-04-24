@@ -1227,6 +1227,18 @@ export async function runInProcessTeammate(
               break
             }
 
+            // Log tool-related messages for debugging
+            if (message.type === 'tool_use') {
+              logForDebugging(`[inProcessRunner] ${identity.agentId} tool_use: ${message.message.content.map(b => b.type === 'tool_use' ? b.name : '').join(', ')}`)
+            } else if (message.type === 'tool_result') {
+              logForDebugging(`[inProcessRunner] ${identity.agentId} tool_result received`)
+            } else if (message.type === 'assistant') {
+              const hasToolUse = message.message.content.some(b => b.type === 'tool_use')
+              if (hasToolUse) {
+                logForDebugging(`[inProcessRunner] ${identity.agentId} assistant with tool_use blocks`)
+              }
+            }
+
             iterationMessages.push(message)
             allMessages.push(message)
 
@@ -1291,6 +1303,8 @@ export async function runInProcessTeammate(
         task => ({ ...task, currentWorkAbortController: undefined }),
         setAppState,
       )
+
+      logForDebugging(`[inProcessRunner] ${identity.agentId} runAgent loop ended, workWasAborted=${workWasAborted}`)
 
       // Check if lifecycle aborted during agent run (kills whole teammate)
       if (abortController.signal.aborted) {
