@@ -535,6 +535,12 @@ export async function loadConversationForResume(
       // Load full messages for lite logs
       if (isLiteLog(log)) {
         log = await loadFullLog(log)
+        // If messages are still empty after loading, the session file couldn't be loaded
+        if (log.messages.length === 0) {
+          throw new Error(
+            `Failed to load session: session file not found or empty (fullPath: ${log.fullPath ?? 'unknown'})`,
+          )
+        }
       }
 
       // Determine sessionId first so we can pass it to copy functions

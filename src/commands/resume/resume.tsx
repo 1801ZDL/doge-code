@@ -134,7 +134,9 @@ function ResumeCommand({
     void loadLogs(newValue, worktreePaths);
   }, [showAllProjects, loadLogs, worktreePaths]);
   async function handleSelect(log: LogOption) {
-    const sessionId = validateUuid(getSessionIdFromLog(log));
+    try {
+    const rawSessionId = getSessionIdFromLog(log);
+    const sessionId = validateUuid(rawSessionId);
     if (!sessionId) {
       onDone('Failed to resume conversation');
       return;
@@ -168,6 +170,9 @@ function ResumeCommand({
     // Same directory - proceed with resume
     setResuming(true);
     void onResume(sessionId, fullLog, 'slash_command_picker');
+    } catch (e) {
+      onDone(`Failed to resume: ${e}`);
+    }
   }
   function handleCancel() {
     onDone('Resume cancelled', {

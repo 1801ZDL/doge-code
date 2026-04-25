@@ -289,7 +289,7 @@ export function ResumeConversation({
         success: false
       });
       logError(e as Error);
-      throw e;
+      setResuming(false);
     }
   }
   if (crossProjectCommand) {

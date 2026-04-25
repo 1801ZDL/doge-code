@@ -3021,7 +3021,9 @@ export async function loadFullLog(log: LogOption): Promise<LogOption> {
   // Use the fullPath from the index entry directly
   const sessionFile = log.fullPath
   if (!sessionFile) {
-    return log
+    throw new Error(
+      `Failed to load session: session file path is missing (sessionId: ${log.sessionId ?? 'unknown'})`,
+    )
   }
 
   try {
@@ -3037,6 +3039,7 @@ export async function loadFullLog(log: LogOption): Promise<LogOption> {
       prUrls,
       prRepositories,
       modes,
+      permissionModes,
       worktreeStates,
       fileHistorySnapshots,
       attributionSnapshots,
@@ -3047,7 +3050,9 @@ export async function loadFullLog(log: LogOption): Promise<LogOption> {
     } = await loadTranscriptFile(sessionFile)
 
     if (messages.size === 0) {
-      return log
+      throw new Error(
+        `Failed to load session: session file is empty or could not be read (fullPath: ${sessionFile})`,
+      )
     }
 
     // Find the most recent user/assistant leaf message from the transcript
@@ -3058,7 +3063,9 @@ export async function loadFullLog(log: LogOption): Promise<LogOption> {
         (msg.type === 'user' || msg.type === 'assistant'),
     )
     if (!mostRecentLeaf) {
-      return log
+      throw new Error(
+        `Failed to load session: no valid message found in session file (fullPath: ${sessionFile})`,
+      )
     }
 
     // Build the conversation chain from this leaf
