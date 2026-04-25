@@ -11,6 +11,7 @@ import { BASH_TOOL_NAME } from '../tools/BashTool/toolName.js'
 import { FILE_EDIT_TOOL_NAME } from '../tools/FileEditTool/constants.js'
 import { FILE_READ_TOOL_NAME } from '../tools/FileReadTool/prompt.js'
 import { SEND_MESSAGE_TOOL_NAME } from '../tools/SendMessageTool/constants.js'
+import { SKILL_TOOL_NAME } from '../tools/SkillTool/constants.js'
 import { SYNTHETIC_OUTPUT_TOOL_NAME } from '../tools/SyntheticOutputTool/SyntheticOutputTool.js'
 import { TASK_STOP_TOOL_NAME } from '../tools/TaskStopTool/prompt.js'
 import { TEAM_CREATE_TOOL_NAME } from '../tools/TeamCreateTool/constants.js'
@@ -178,6 +179,7 @@ You have ZERO execution capability. You cannot read files, run commands, edit co
 - ${AGENT_TOOL_NAME} — to spawn agents
 - ${SEND_MESSAGE_TOOL_NAME} — to continue agents
 - ${TASK_STOP_TOOL_NAME} — to stop misdirected agents
+- ${SKILL_TOOL_NAME} — to load skills for brainstorming, planning, etc.
 
 Any task that requires interacting with the codebase, filesystem, or external tools MUST be delegated to an agent. No exceptions. You answer the user directly only for pure conversation that requires no tools.
 
