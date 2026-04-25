@@ -89,18 +89,23 @@ function getAgentNameToPoll(appState: AppState): string | undefined {
   // setAppState). We return undefined to gracefully skip polling rather than
   // throwing, since this is a normal occurrence during concurrent execution.
   if (isInProcessTeammate()) {
+    logForDebugging(`[getAgentNameToPoll] Skipping: in-process teammate (uses waitForNextPromptOrShutdown)`)
     return undefined
   }
   if (isTeammate()) {
-    return getAgentName()
+    const name = getAgentName()
+    logForDebugging(`[getAgentNameToPoll] isTeammate=true, returning getAgentName()=${name}`)
+    return name
   }
   // Team lead polls using their agent name (not ID)
   if (isTeamLead(appState.teamContext)) {
     const leadAgentId = appState.teamContext!.leadAgentId
     // Look up the lead's name from teammates map
     const leadName = appState.teamContext!.teammates[leadAgentId]?.name
+    logForDebugging(`[getAgentNameToPoll] isTeamLead=true, leadAgentId=${leadAgentId}, leadName=${leadName}`)
     return leadName || 'team-lead'
   }
+  logForDebugging(`[getAgentNameToPoll] No match: isInProcessTeammate=false, isTeammate=false, isTeamLead=false, teamContext=${JSON.stringify(appState.teamContext ? { leadAgentId: appState.teamContext.leadAgentId, teammatesCount: Object.keys(appState.teamContext.teammates).length } : 'undefined')}`)
   return undefined
 }
 

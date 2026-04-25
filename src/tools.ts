@@ -1,4 +1,5 @@
 // biome-ignore-all assist/source/organizeImports: ANT-ONLY import markers must not be reordered
+import { logForDebugging } from './utils/debug.js'
 import { toolMatchesName, type Tool, type Tools } from './Tool.js'
 import { AgentTool } from './tools/AgentTool/AgentTool.js'
 import { SkillTool } from './tools/SkillTool/SkillTool.js'
@@ -299,9 +300,11 @@ export const getTools = (permissionContext: ToolPermissionContext): Tools => {
   ])
 
   const tools = getAllBaseTools().filter(tool => !specialTools.has(tool.name))
+  logForDebugging(`[getTools] After specialTools filter: count=${tools.length}, has SendMessage=${tools.map(t=>t.name).includes('SendMessage')}`)
 
   // Filter out tools that are denied by the deny rules
   let allowedTools = filterToolsByDenyRules(tools, permissionContext)
+  logForDebugging(`[getTools] After filterToolsByDenyRules: count=${allowedTools.length}, has SendMessage=${allowedTools.map(t=>t.name).includes('SendMessage')}`)
 
   // When REPL mode is enabled, hide primitive tools from direct use.
   // They're still accessible inside REPL via the VM context.
@@ -317,7 +320,9 @@ export const getTools = (permissionContext: ToolPermissionContext): Tools => {
   }
 
   const isEnabled = allowedTools.map(_ => _.isEnabled())
-  return allowedTools.filter((_, i) => isEnabled[i])
+  const result = allowedTools.filter((_, i) => isEnabled[i])
+  logForDebugging(`[getTools] After isEnabled filter: count=${result.length}, has SendMessage=${result.map(t=>t.name).includes('SendMessage')}`)
+  return result
 }
 
 /**
@@ -340,7 +345,11 @@ export function assembleToolPool(
   permissionContext: ToolPermissionContext,
   mcpTools: Tools,
 ): Tools {
-  const builtInTools = getTools(permissionContext)
+  // Use getAllBaseTools() instead of getTools() to avoid isEnabled() filtering.
+  // getTools() filters out tools like SendMessage whose isEnabled() returns
+  // isAgentSwarmsEnabled() (false for external users). But workers in coordinator
+  // mode need SendMessage to communicate with the leader.
+  const allBaseTools = getAllBaseTools()
 
   // Filter out MCP tools that are in the deny list
   const allowedMcpTools = filterToolsByDenyRules(mcpTools, permissionContext)
@@ -355,7 +364,7 @@ export function assembleToolPool(
   // readonly so copy-then-sort; allowedMcpTools is a fresh .filter() result.
   const byName = (a: Tool, b: Tool) => a.name.localeCompare(b.name)
   return uniqBy(
-    [...builtInTools].sort(byName).concat(allowedMcpTools.sort(byName)),
+    [...allBaseTools].sort(byName).concat(allowedMcpTools.sort(byName)),
     'name',
   )
 }

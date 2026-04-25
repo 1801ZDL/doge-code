@@ -67,6 +67,10 @@ import {
 } from '../../utils/swarm/teammateLayoutManager.js'
 import { getHardcodedTeammateModelFallback } from '../../utils/swarm/teammateModel.js'
 import { registerTask } from '../../utils/task/framework.js'
+import {
+  setDynamicTeamContext,
+  type TeammateContext,
+} from '../../utils/teammate.js'
 import { writeToMailbox } from '../../utils/teammateMailbox.js'
 import type { CustomAgentDefinition } from '../AgentTool/loadAgentsDir.js'
 import { isCustomAgent } from '../AgentTool/loadAgentsDir.js'
@@ -958,6 +962,7 @@ async function handleSpawnInProcess(
       appState.toolPermissionContext,
       appState.mcp.tools,
     )
+    logForDebugging(`[handleSpawnInProcess] workerTools count=${workerTools.length}, includes SendMessage=${workerTools.map(t => t.name).includes('SendMessage')}`)
 
     startInProcessTeammate({
       identity: {
@@ -978,7 +983,9 @@ async function handleSpawnInProcess(
       // (it builds its own history via allMessages in inProcessRunner).
       // Passing the parent's full conversation here would pin it for the
       // teammate's lifetime, surviving /clear and auto-compact.
-      toolUseContext: { ...context, messages: [] },
+      // Use workerTools for options.tools so runToolUse can find SendMessage
+      // and other tools the worker needs but Commander filtered out.
+      toolUseContext: { ...context, messages: [], options: { ...context.options, tools: workerTools } },
       abortController: result.abortController,
       invokingRequestId: input.invokingRequestId,
       availableTools: workerTools,
@@ -990,12 +997,12 @@ async function handleSpawnInProcess(
 
   // Track the teammate in AppState's teamContext
   // Auto-register leader if spawning without prior spawnTeam call
-  setAppState(prev => {
-    const needsLeaderSetup = !prev.teamContext?.leadAgentId
-    const leadAgentId = needsLeaderSetup
-      ? formatAgentId(TEAM_LEAD_NAME, teamName)
-      : prev.teamContext!.leadAgentId
+  const needsLeaderSetup = !appState.teamContext?.leadAgentId
+  const leadAgentId = needsLeaderSetup
+    ? formatAgentId(TEAM_LEAD_NAME, teamName)
+    : appState.teamContext!.leadAgentId
 
+  setAppState(prev => {
     // Build teammates map, including leader if needed for inbox polling
     const existingTeammates = prev.teamContext?.teammates || {}
     const leadEntry = needsLeaderSetup
@@ -1035,6 +1042,22 @@ async function handleSpawnInProcess(
       },
     }
   })
+
+  // If this is the leader (first spawn in coordinator mode), set up dynamicTeamContext
+  // so the leader can poll its own mailbox for messages from teammates.
+  // This is critical for in-process teammates to work correctly - without this,
+  // isTeamLead() returns false and the leader never polls its mailbox.
+  if (needsLeaderSetup) {
+    logForDebugging(`[handleSpawnInProcess] Setting up leader dynamicTeamContext: leadAgentId=${leadAgentId}, teamName=${teamName}`)
+    setDynamicTeamContext({
+      agentId: leadAgentId,
+      agentName: TEAM_LEAD_NAME,
+      teamName: teamName,
+      color: assignTeammateColor(leadAgentId),
+      planModeRequired: false,
+      parentSessionId: undefined,
+    })
+  }
 
   // Register agent in the team file
   let teamFile = await readTeamFileAsync(teamName)

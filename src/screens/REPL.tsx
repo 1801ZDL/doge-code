@@ -4088,7 +4088,10 @@ export function REPL({
     interimRange: null
   };
   useInboxPoller({
-    enabled: isAgentSwarmsEnabled(),
+    // In coordinator mode, enable inbox polling even if isAgentSwarmsEnabled() is false.
+    // Coordinator mode spawns in-process teammates that communicate via mailbox, so
+    // the leader must poll its mailbox to receive messages from workers.
+    enabled: isAgentSwarmsEnabled() || isEnvTruthy(process.env.CLAUDE_CODE_COORDINATOR_MODE),
     isLoading,
     focusedInputDialog,
     onSubmitMessage: handleIncomingPrompt

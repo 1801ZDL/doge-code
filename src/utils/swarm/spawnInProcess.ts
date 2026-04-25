@@ -180,10 +180,19 @@ export async function spawnInProcessTeammate(
     }
 
     // Register cleanup handler for graceful shutdown
+    // NOTE: This runs when ANY part of the app calls gracefulShutdown,
+    // including SSE reconnection failures, SIGINT, etc.
+    // IMPORTANT: Do NOT abort the worker here! Workers are independent entities
+    // that should only be killed via explicit killInProcessTeammate() calls.
+    // Aborting here kills workers during transient issues (like SSE reconnection)
+    // when the worker should actually survive and continue waiting for messages.
     const unregisterCleanup = registerCleanup(async () => {
-      logForDebugging(`[spawnInProcessTeammate] Cleanup called for ${agentId}`)
-      abortController.abort()
-      // Task state will be updated by the execution loop when it detects abort
+      logForDebugging(`[spawnInProcessTeammate] Cleanup called for ${agentId} - NOT aborting worker (let it survive transient shutdowns)`)
+      // Do NOT call abortController.abort() here!
+      // Worker will exit when:
+      // 1. Explicit killInProcessTeammate is called
+      // 2. Leader truly shuts down (not just transient reconnection)
+      // 3. Worker detects leader is gone via mailbox polling failure
     })
     taskState.unregisterCleanup = unregisterCleanup
 

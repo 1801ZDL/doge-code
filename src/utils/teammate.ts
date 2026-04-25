@@ -23,6 +23,7 @@ export {
 } from './teammateContext.js'
 
 import type { AppState } from '../state/AppState.js'
+import { logForDebugging } from './debug.js'
 import { isEnvTruthy } from './envUtils.js'
 import { getTeammateContext } from './teammateContext.js'
 
@@ -127,7 +128,9 @@ export function isTeammate(): boolean {
   const inProcessCtx = getTeammateContext()
   if (inProcessCtx) return true
   // Tmux teammates require both agent ID and team name
-  return !!(dynamicTeamContext?.agentId && dynamicTeamContext?.teamName)
+  const result = !!(dynamicTeamContext?.agentId && dynamicTeamContext?.teamName)
+  logForDebugging(`[isTeammate] inProcessCtx=${!!inProcessCtx}, dynamicTeamContext=${JSON.stringify(dynamicTeamContext)}, result=${result}`)
+  return result
 }
 
 /**

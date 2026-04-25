@@ -1197,7 +1197,9 @@ export async function runInProcessTeammate(
           // In-process teammates are async but run in the same process as the leader,
           // so they CAN show permission prompts (unlike true background agents).
           // Use currentWorkAbortController so Escape stops this turn only, not the teammate.
-          logForDebugging(`[inProcessRunner] ${identity.agentId} calling runAgent, tools count: ${toolUseContext.options.tools.length}`)
+          const toolNames = toolUseContext.options.tools.map(t => t.name)
+          appendDebugLog(`[inProcessRunner] ${identity.agentId} tools count: ${toolUseContext.options.tools.length}, has SendMessage: ${toolNames.includes('SendMessage')}, first 5 tools: ${toolNames.slice(0, 5).join(',')}`)
+          logForDebugging(`[inProcessRunner] ${identity.agentId} calling runAgent, tools count: ${toolUseContext.options.tools.length}, has SendMessage: ${toolNames.includes('SendMessage')}`)
           appendDebugLog(` ${identity.agentId} BEFORE for await runAgent call`)
           for await (const message of runAgent({
             agentDefinition: iterationAgentDefinition,
@@ -1225,6 +1227,10 @@ export async function runInProcessTeammate(
             model: model as ModelAlias | undefined,
             preserveToolUseResults: true,
             availableTools: config.availableTools ?? toolUseContext.options.tools,
+            // Skip filterToolsForAgent since availableTools is already the full tool pool
+            // assembled with assembleToolPool. This ensures SendMessage and other tools
+            // that would be filtered out for async agents are available.
+            useExactTools: true,
             allowedTools,
             contentReplacementState: teammateReplacementState,
           })) {

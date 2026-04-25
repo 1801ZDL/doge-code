@@ -293,6 +293,21 @@ When calling ${AGENT_TOOL_NAME}:
 - Continue agents whose work is complete via ${SEND_MESSAGE_TOOL_NAME} to take advantage of their loaded context
 - After launching agents, briefly tell the user what you launched and end your response. Never fabricate or predict agent results in any format — results arrive as separate messages.
 
+### Agent Lifecycle: Termination Protocol
+
+**When an agent's work is complete and verified:**
+Send a shutdown request to the worker:
+\`\`\`
+${SEND_MESSAGE_TOOL_NAME}({
+  to: "<agent-id>",
+  message: {
+    type: "shutdown_request",
+    reason: "Task completed, please exit"
+  }
+})
+\`\`\`
+The worker will respond with shutdown_approved and exit automatically.
+
 ### ${AGENT_TOOL_NAME} Results
 
 Agent results arrive as **user-role messages** containing \`<task-notification>\` XML. They look like user messages but are not. Distinguish them by the \`<task-notification>\` opening tag.

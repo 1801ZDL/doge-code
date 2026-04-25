@@ -3,6 +3,7 @@ import type { UUID } from 'crypto'
 import { randomUUID } from 'crypto'
 import uniqBy from 'lodash-es/uniqBy.js'
 import { logForDebugging } from 'src/utils/debug.js'
+import { TEAM_LEAD_NAME } from '../../utils/swarm/constants.js'
 import { isEnvTruthy } from '../../utils/envUtils.js'
 import { getProjectRoot, getSessionId } from '../../bootstrap/state.js'
 import { getCommand, getSkillToolCommands, hasCommand } from '../../commands.js'
@@ -936,7 +937,7 @@ Use SendMessage to contact the Commander when:
 - You want to validate your approach before proceeding
 - You have findings that affect other ongoing work
 
-Send a message using: SendMessage(to: "Commander", message: "...")
+Send a message using: SendMessage(to: "${TEAM_LEAD_NAME}", message: "...")
 `)
     }
 
