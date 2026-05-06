@@ -235,7 +235,7 @@ function worktreePathFor(repoRoot: string, slug: string): string {
 async function getOrCreateWorktree(
   repoRoot: string,
   slug: string,
-  options?: { prNumber?: number },
+  options?: { prNumber?: number; baseRef?: string },
 ): Promise<WorktreeCreateResult> {
   const worktreePath = worktreePathFor(repoRoot, slug)
   const worktreeBranch = worktreeBranchName(slug)
@@ -261,7 +261,14 @@ async function getOrCreateWorktree(
 
   let baseBranch: string
   let baseSha: string | null = null
-  if (options?.prNumber) {
+  if (options?.baseRef) {
+    // Caller-provided base (e.g., current HEAD when spawning an agent from
+    // inside a worktree). Skip branch resolution/fetch to avoid basing the
+    // agent worktree on the main repo's default branch instead of the user's
+    // current working commit.
+    baseBranch = options.baseRef
+    baseSha = null
+  } else if (options?.prNumber) {
     const { code: prFetchCode, stderr: prFetchStderr } =
       await execFileNoThrowWithCwd(
         gitExe(),
@@ -931,8 +938,19 @@ export async function createAgentWorktree(slug: string): Promise<{
     )
   }
 
+  // When the user is already inside a worktree, base the agent worktree on
+  // the current HEAD rather than the main repo's default branch. Otherwise
+  // agents get the wrong commit (missing the user's in-progress changes),
+  // and may lack initialized submodules.
+  const { stdout: headStdout, code: headCode } = await execFileNoThrowWithCwd(
+    gitExe(),
+    ['rev-parse', 'HEAD'],
+    { cwd: getCwd() },
+  )
+  const baseRef = headCode === 0 ? headStdout.trim() : undefined
+
   const { worktreePath, worktreeBranch, headCommit, existed } =
-    await getOrCreateWorktree(gitRoot, slug)
+    await getOrCreateWorktree(gitRoot, slug, baseRef ? { baseRef } : undefined)
 
   if (!existed) {
     logForDebugging(
