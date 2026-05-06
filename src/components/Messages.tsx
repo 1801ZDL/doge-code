@@ -378,14 +378,11 @@ const MessagesImpl = ({
   const toggleShowAllShortcut = useShortcutDisplay('transcript:toggleShowAll', 'Transcript', 'Ctrl+E');
   const normalizedMessages = useMemo(() => normalizeMessages(messages).filter(isNotEmptyMessage), [messages]);
 
-  // Check if streaming thinking should be visible (streaming or within 30s timeout)
+  // Show streaming thinking block when it exists. When streaming, show full
+  // content; when done, render collapsed single-line so it doesn't vanish and
+  // cause layout jumps.
   const isStreamingThinkingVisible = useMemo(() => {
-    if (!streamingThinking) return false;
-    if (streamingThinking.isStreaming) return true;
-    if (streamingThinking.streamingEndedAt) {
-      return Date.now() - streamingThinking.streamingEndedAt < 30000;
-    }
-    return false;
+    return !!streamingThinking;
   }, [streamingThinking]);
 
   // Find the last thinking block (message UUID + content index) for hiding past thinking in transcript mode
@@ -715,7 +712,7 @@ const MessagesImpl = ({
           <AssistantThinkingMessage param={{
         type: 'thinking',
         thinking: streamingThinking.thinking
-      }} addMargin={false} isTranscriptMode={true} verbose={verbose} hideInTranscript={false} />
+      }} addMargin={false} isTranscriptMode={streamingThinking.isStreaming} verbose={verbose} hideInTranscript={false} />
         </Box>}
     </>;
 };
