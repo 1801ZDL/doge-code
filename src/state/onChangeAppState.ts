@@ -5,6 +5,10 @@ import {
   clearGcpCredentialsCache,
 } from '../utils/auth.js'
 import { getGlobalConfig, saveGlobalConfig } from '../utils/config.js'
+import {
+  readCustomApiStorage,
+  writeCustomApiStorage,
+} from '../utils/customApiStorage.js'
 import { toError } from '../utils/errors.js'
 import { logError } from '../utils/log.js'
 import { applyConfigEnvironmentVariables } from '../utils/managedEnv.js'
@@ -107,6 +111,19 @@ export function onChangeAppState({
     setMainLoopModelOverride(null)
     // Re-apply environment variables for the new model
     applyConfigEnvironmentVariables()
+    // Clear the current custom model from storage
+    const secureStored = readCustomApiStorage()
+    writeCustomApiStorage({
+      ...secureStored,
+      model: undefined,
+    })
+    saveGlobalConfig(current => ({
+      ...current,
+      customApiEndpoint: {
+        ...current.customApiEndpoint,
+        model: undefined,
+      },
+    }))
   }
 
   // mainLoopModel: add it to settings?
@@ -119,6 +136,35 @@ export function onChangeAppState({
     setMainLoopModelOverride(newState.mainLoopModel)
     // Re-apply environment variables for the new model
     applyConfigEnvironmentVariables()
+    // Sync custom API endpoint config for the new model
+    const secureStored = readCustomApiStorage()
+    const modelEndpointConfig =
+      secureStored.modelEndpointMap?.[newState.mainLoopModel]
+    writeCustomApiStorage({
+      ...secureStored,
+      model: newState.mainLoopModel,
+      ...(modelEndpointConfig
+        ? {
+            provider: modelEndpointConfig.provider,
+            baseURL: modelEndpointConfig.baseURL,
+            apiKey: modelEndpointConfig.apiKey,
+          }
+        : {}),
+    })
+    saveGlobalConfig(current => ({
+      ...current,
+      customApiEndpoint: {
+        ...current.customApiEndpoint,
+        model: newState.mainLoopModel,
+        ...(modelEndpointConfig
+          ? {
+              provider: modelEndpointConfig.provider,
+              baseURL: modelEndpointConfig.baseURL,
+              apiKey: modelEndpointConfig.apiKey,
+            }
+          : {}),
+      },
+    }))
   }
 
   // expandedView → persist as showExpandedTodos + showSpinnerTree for backwards compat
