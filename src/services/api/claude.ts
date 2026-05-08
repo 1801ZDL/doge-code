@@ -519,13 +519,7 @@ export function getAPIMetadata() {
   }
 
   return {
-    user_id: jsonStringify({
-      ...extra,
-      device_id: getOrCreateUserID(),
-      // Only include OAuth account UUID when actively using OAuth authentication
-      account_uuid: getOauthAccountInfo()?.accountUuid ?? '',
-      session_id: getSessionId(),
-    }),
+    user_id: getOrCreateUserID(),
   }
 }
 
