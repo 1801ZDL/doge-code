@@ -1,6 +1,6 @@
 # Doge Code
 
-> Claude Code 的一个 Fork。不是官方正史，而是平行世界番外篇；不是萌豚整活仓库，而是“认真修、顺手发癫一点点”的工程分支。
+> Claude Code 的一个 Fork。不是官方正史，而是平行世界番外篇；不是萌豚整活仓库，而是"认真修、顺手发癫一点点"的工程分支。
 
 > **免责声明**：本项目仅供个人学习与技术研究，不得用于任何商业用途或非法用途。所有原始源码版权归 [Anthropic](https://www.anthropic.com) 所有。
 
@@ -19,9 +19,9 @@
 
 可以把它理解为：
 
-- 基底仍然是“通过 source map 逆向还原 + 缺失模块补齐”得到的可运行代码树
+- 基底仍然是"通过 source map 逆向还原 + 缺失模块补齐"得到的可运行代码树
 - 但在此之上，加入了这个 Fork 自己的目标和行为调整
-- 目标不是“100% 忠于上游”，而是“让它更适合折腾、适合代理转接、适合自定义模型接入”
+- 目标不是"100% 忠于上游"，而是"让它更适合折腾、适合代理转接、适合自定义模型接入"
 
 如果用 ACG 比喻，大概属于：
 
@@ -34,13 +34,13 @@
 这个仓库当前强调的是以下方向：
 
 - 支持自定义 Anthropic 兼容接口地址
-- 正在加入 OpenAI Chat Completions ↔ Anthropic Messages 转接能力
+- 正在加入 OpenAI Chat Completions <-> Anthropic Messages 转接能力
 - 支持自定义 API Key
 - 支持自定义模型与模型列表管理
 - 尽量把自定义接入数据收口到 [`~/.doge`](README.md) 路径体系
 - 在保留 CLI/TUI 主体结构的前提下，降低对官方登录流的绑定
 
-换句话说，它现在更像一个“可自托管 / 可代理 / 可转接”的 [`Claude Code`](README.md) 变体。
+换句话说，它现在更像一个"可自托管 / 可代理 / 可转接"的 [`Claude Code`](README.md) 变体。
 
 ## 与原版 Claude Code 的数据隔离
 
@@ -57,7 +57,7 @@
 - 原版保存的 endpoint / token / model 配置影响 Doge 的代理转接逻辑
 - 两边共用 [`.claude.json`](README.md) 或 [`.claude/`](README.md) 导致奇怪的网络、认证、模型或 UI 异常
 
-如果用户以前装过原版 [`Claude Code`](README.md)，再运行 [`Doge Code`](README.md) 时出现“明明没这么配却读到了旧配置”的现象，通常就是历史数据混用导致的。
+如果用户以前装过原版 [`Claude Code`](README.md)，再运行 [`Doge Code`](README.md) 时出现"明明没这么配却读到了旧配置"的现象，通常就是历史数据混用导致的。
 
 建议：
 
@@ -71,7 +71,7 @@
 
 ## OpenAI 兼容接口说明
 
-[`Doge Code`](README.md) 正在加入一个“中间转接层”模式，用来让内部仍按 Anthropic Messages 结构工作的主逻辑，转发到 OpenAI Chat Completions 接口。
+[`Doge Code`](README.md) 正在加入一个"中间转接层"模式，用来让内部仍按 Anthropic Messages 结构工作的主逻辑，转发到 OpenAI Chat Completions 接口。
 
 目标行为是：
 
@@ -103,7 +103,7 @@
 - 来自恢复过程的 shim、fallback、兼容层
 - 来自 Doge Code 的主动魔改
 
-这两类改动都是真实存在的，不建议把当前代码误判成“官方上游源码镜像”。
+这两类改动都是真实存在的，不建议把当前代码误判成"官方上游源码镜像"。
 
 ## 当前状态
 
@@ -117,7 +117,7 @@
 
 ## 为什么会有这个仓库
 
-因为 source map 并不能召唤完整原仓库，最多只能说“把灵魂碎片召回来一部分”。
+因为 source map 并不能召唤完整原仓库，最多只能说"把灵魂碎片召回来一部分"。
 
 常见缺口包括：
 
@@ -210,7 +210,7 @@ bun link
 - [`bun install`](README.md)：同步依赖变化
 - [`bun link`](README.md)：刷新全局 link 注册，确保命令入口与当前源码一致
 
-如果你本地就是长期用源码目录跑 [`Doge Code`](README.md)，这基本就是“源码级更新”的标准姿势。
+如果你本地就是长期用源码目录跑 [`Doge Code`](README.md)，这基本就是"源码级更新"的标准姿势。
 
 ### 一个推荐工作流
 
@@ -300,19 +300,98 @@ bun run version
 补充说明：
 
 - 当前这份 Fork 已默认带一个可用的 Buddy，通常启动后就是开启状态
-- [`/buddy mute`](README.md) 是“关闭显示和冒泡”，不是删除宠物数据
+- [`/buddy mute`](README.md) 是"关闭显示和冒泡"，不是删除宠物数据
 - [`/buddy unmute`](README.md) 会恢复显示
 - 如果你在聊天里直接提到 `Buddy`，它有时会自己在气泡里回应
+
+## 本地sglang模型接入说明
+
+第一次启动默认会进入/login，最新版SGLANG可以直接选择1.0 Anthropic格式的API请求
+输入https://127.0.0.1:8000（本地sglang服务端口）,模型名称自定义
+模型名称自定义
+
+## 更新日志
+
+以下是基于 commit 历史的更新线。时间由近到远排列，每个阶段标注了主要改动方向。
+
+### 2026-05-08 — DeepSeek 兼容修复
+
+- **fix**: `user_id` 字段从 JSON 对象序列化改为纯 hex 字符串，修复 DeepSeek API `400 Invalid user_id` 错误（正则要求 `^[a-zA-Z0-9_-]+$`）
+
+### 2026-05-06 — 模型管理与竞争对比
+
+- **feat**: 模型注册表（model registry）、第三方 token 计数、每模型独立 endpoint 配置
+- **feat**: 新增 `/compete` 命令，支持并行多方案对比
+- **fix**: thinking 流显示修复、plan mode 焦点恢复
+
+### 2026-04-25 — Coordinator 通信完善
+
+- **feat**: Commander 可用工具集加入 Skill tool
+- **fix**: Worker-to-Commander SendMessage 通道打通
+- **fix**: `loadFullLog` 因缺失 `permissionModes` 静默返回空消息
+
+### 2026-04-24 — Agent 多智能体基础设施
+
+- **feat**: 引入 teammate 基础设施支撑 coordinator agent 生命周期
+- **feat**: 强制为所有 agent 注入 SendMessage 工具与 skill 使用指导
+- **feat**: coordinator agent 空闲循环（idle loop）与 team 文件自动创建
+- **fix**: 避免 coordinator 模式下 permission deadlock
+- **fix**: 将完整 tool pool 传给 worker，而非过滤后的 coordinator 工具集
+- **debug**: 补充大量 coordinator 运行期日志
+
+### 2026-04-19 — Coordinator 目标追踪与可见性
+
+- **feat**: Coordinator 模式迭代分解 + 目标追踪（goal tracking）
+- **feat**: 非 coordinator 模式也加入目标追踪指导
+- **feat**: 后台任务可见性增强、`AgentViewHeader` 查看 LocalAgentTask 转录
+- **feat**: `/dream` skill 用于睡眠模拟
+- **feat**: `GoalReminderDetector` 长任务提醒 + `queueAndDisplayMessage` 可见提醒
+
+### 2026-04-15 — 目录重构与 Coordinator 模式启动
+
+- **refactor**: 项目级配置目录统一为 `.claude/`，用户级保留 `.doge/`
+- **feat**: 新增 `/coordinator` 命令开启 coordinator 多智能体模式
+- **fix**: 移除 feature gate，默认可用 coordinator 模式
+
+### 2026-04-11 ~ 04-12 — 权限与队列
+
+- **feat**: Focus mode（自动批准非危险命令）
+- **feat**: `/queue` 顺序任务执行
+- **feat**: WebFetch 白名单扩展、与 Anthropic API 解耦、模型环境变量处理优化
+- **fix**: Focus mode 对危险删除路径仍然弹窗确认
+
+### 2026-04-03 ~ 04-08 — API 生态与多模态
+
+- **feat**: 本地模型后端（Local Model Backend）
+- **feat**: Windows 平台 `computer-use` MCP 支持
+- **feat**: macOS `computer-use` 修复
+- **feat**: 多模态输入支持
+- **feat**: 思考块（thinking block）实现
+- **feat**: Responses API 支持（实验性）
+- **feat**: Gemini API 支持
+- **feat**: 为新增 API 接入 effort 控制
+- **feat**: OpenAI API 格式思考字段输出
+- **feat**: Buddy 宠物系统完善
+- **fix**: WebSearch 修复（需重新 `bun install`）
+- **fix**: Linux 下 `bun link` 后启动脚本被 shell 误识别问题
+- **fix**: `Unable to connect to Anthropic services` 连接问题
+- **refactor**: 所有 `.claude/` 目录重命名为 `.doge/`
+- **refactor**: 进一步切断外发遥测主链
+
+### 2026-04-01 ~ 04-02 — 项目初始化与 OpenAI 兼容
+
+- **init**: Doge Code 首次出场
+- **feat**: 完美兼容 OpenAI API 格式
+- **feat**: 所有模型可用 SubAgent
+- **feat**: Agent 调用时显示模型真实名称
+- **feat**: OpenAI thinking 预算：Low=1024 / Medium=4096 / High=8192 / None=关闭
+- **refactor**: 移除收集隐私的监控
+- **refactor**: 防蒸馏监控去除
+- **refactor**: 全局包名改为 `@doge-code/cli`，默认命令名改为 `doge`
 
 ## 说明与免责声明
 
 - 本仓库是 [`Claude Code`](README.md) 的 Fork：[`Doge Code`](README.md)
 - 它包含恢复期代码与后续 Fork 改动，不代表官方立场
-- 如果某些行为看起来“很像官方，但又不完全像”，那通常不是你看错了，而是这确实是恢复版 + 魔改版的叠加态
+- 如果某些行为看起来"很像官方，但又不完全像"，那通常不是你看错了，而是这确实是恢复版 + 魔改版的叠加态
 - 如果某些文案偶尔带一点 ACG 味，那是彩蛋，不是类型系统坏掉了（至少不全是）
-
-
-## 本地sglang模型接入说明
-第一次启动默认会进入/login，最新版SGLANG可以直接选择1.0 Anthropic格式的API请求
-输入https://127.0.0.1:8000（本地sglang服务端口）,模型名称自定义
-模型名称自定义
