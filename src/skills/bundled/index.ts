@@ -3,6 +3,7 @@ import { shouldAutoEnableClaudeInChrome } from 'src/utils/claudeInChrome/setup.j
 import { registerBatchSkill } from './batch.js'
 import { registerClaudeInChromeSkill } from './claudeInChrome.js'
 import { registerDebugSkill } from './debug.js'
+import { registerInitMemorySkill } from './initMemory.js'
 import { registerKeybindingsSkill } from './keybindings.js'
 import { registerLoremIpsumSkill } from './loremIpsum.js'
 import { registerRememberSkill } from './remember.js'
@@ -38,6 +39,9 @@ export function initBundledSkills(): void {
   const { registerDreamSkill } = require('./dream.js')
   /* eslint-enable @typescript-eslint/no-require-imports */
   registerDreamSkill()
+  // /init-memory initializes the hierarchical memory framework for a project.
+  // Available when auto-memory is enabled.
+  registerInitMemorySkill()
   if (feature('REVIEW_ARTIFACT')) {
     /* eslint-disable @typescript-eslint/no-require-imports */
     const { registerHunterSkill } = require('./hunter.js')
