@@ -9,6 +9,10 @@ import {
   type MemoryHeader,
   scanMemoryFiles,
 } from './memoryScan.js'
+import {
+  findHierarchicalMemories,
+  hasHierarchicalStructure,
+} from './findHierarchicalMemories.js'
 
 export type RelevantMemory = {
   path: string
@@ -43,6 +47,28 @@ export async function findRelevantMemories(
   recentTools: readonly string[] = [],
   alreadySurfaced: ReadonlySet<string> = new Set(),
 ): Promise<RelevantMemory[]> {
+  // Hierarchical recall entry point: when feature flag is on and LAYER.md exists
+  if (feature('MEMORY_HIERARCHICAL_RECALL') && (await hasHierarchicalStructure(memoryDir))) {
+    try {
+      return await findHierarchicalMemories(
+        query,
+        memoryDir,
+        signal,
+        recentTools,
+        alreadySurfaced,
+      )
+    } catch (e) {
+      if (signal.aborted) {
+        return []
+      }
+      logForDebugging(
+        `[memdir] Hierarchical recall failed, falling back to flat: ${errorMessage(e)}`,
+        { level: 'warn' },
+      )
+      // Fall through to flat recall below
+    }
+  }
+
   const memories = (await scanMemoryFiles(memoryDir, signal)).filter(
     m => !alreadySurfaced.has(m.filePath),
   )
