@@ -1,7 +1,7 @@
 /**
  * Memory type taxonomy.
  *
- * Memories are constrained to four types capturing context NOT derivable
+ * Memories are constrained to five types capturing context NOT derivable
  * from the current project state. Code patterns, architecture, git history,
  * and file structure are derivable (via grep/git/CLAUDE.md) and should NOT
  * be saved as memories.
@@ -16,6 +16,7 @@ export const MEMORY_TYPES = [
   'feedback',
   'project',
   'reference',
+  'layer',
 ] as const
 
 export type MemoryType = (typeof MEMORY_TYPES)[number]
@@ -28,6 +29,25 @@ export type MemoryType = (typeof MEMORY_TYPES)[number]
 export function parseMemoryType(raw: unknown): MemoryType | undefined {
   if (typeof raw !== 'string') return undefined
   return MEMORY_TYPES.find(t => t === raw)
+}
+
+/**
+ * Extended frontmatter schema for the Hierarchical Memory Framework (HMF).
+ * All new fields are optional for backwards compatibility with existing
+ * flat-structure memory files.
+ */
+export interface MemoryFrontmatter {
+  name: string
+  description: string
+  type: MemoryType
+  created?: string           // ISO date, e.g., "2026-05-21"
+  updated?: string           // ISO date
+  layer?: string             // Hierarchical path, e.g., "compiler-frontend/parser"
+  scope?: 'single-layer' | 'cross-layer' | 'project-wide'
+  complexity?: 'simple' | 'complex'
+  status?: 'active' | 'resolved' | 'deprecated'
+  related?: string[]         // Associated file paths
+  parents?: string[]         // Parent layer LAYER.md paths
 }
 
 /**
@@ -101,6 +121,17 @@ export const TYPES_SECTION_COMBINED: readonly string[] = [
   '    assistant: [saves team reference memory: grafana.internal/d/api-latency is the oncall latency dashboard — check it when editing request-path code]',
   '    </examples>',
   '</type>',
+  '<type>',
+  '    <name>layer</name>',
+  '    <scope>usually team</scope>',
+  '    <description>Hierarchy description files for the Hierarchical Memory Framework (HMF). LAYER.md files describe the semantic scope of a directory level in the memory hierarchy — including summaries, keywords, sub-layer references, and statistics. They are system metadata used to navigate the memory tree during recall, not user-facing memories.</description>',
+  '    <when_to_save>When auto-discovery creates a new layer in the hierarchy, or when layer statistics need updating after consolidation.</when_to_save>',
+  '    <how_to_use>Used by the hierarchical recall algorithm to decide which sub-layers to explore. Parsed for `json:sublayers` and `json:stats` blocks.</how_to_use>',
+  '    <examples>',
+  '    [auto-generated during hierarchy setup]',
+  '    assistant: [saves team layer metadata: project/frontend — parser, AST, and codegen sub-layers]',
+  '    </examples>',
+  '</type>',
   '</types>',
   '',
 ]
@@ -171,6 +202,16 @@ export const TYPES_SECTION_INDIVIDUAL: readonly string[] = [
   '',
   "    user: the Grafana board at grafana.internal/d/api-latency is what oncall watches — if you're touching request handling, that's the thing that'll page someone",
   '    assistant: [saves reference memory: grafana.internal/d/api-latency is the oncall latency dashboard — check it when editing request-path code]',
+  '    </examples>',
+  '</type>',
+  '<type>',
+  '    <name>layer</name>',
+  '    <description>Hierarchy description files for the Hierarchical Memory Framework (HMF). LAYER.md files describe the semantic scope of a directory level in the memory hierarchy — including summaries, keywords, sub-layer references, and statistics. They are system metadata used to navigate the memory tree during recall, not user-facing memories.</description>',
+  '    <when_to_save>When auto-discovery creates a new layer in the hierarchy, or when layer statistics need updating after consolidation.</when_to_save>',
+  '    <how_to_use>Used by the hierarchical recall algorithm to decide which sub-layers to explore. Parsed for `json:sublayers` and `json:stats` blocks.</how_to_use>',
+  '    <examples>',
+  '    [auto-generated during hierarchy setup]',
+  '    assistant: [saves layer metadata: project/frontend — parser, AST, and codegen sub-layers]',
   '    </examples>',
   '</type>',
   '</types>',
@@ -264,6 +305,16 @@ export const MEMORY_FRONTMATTER_EXAMPLE: readonly string[] = [
   'name: {{memory name}}',
   'description: {{one-line description — used to decide relevance in future conversations, so be specific}}',
   `type: {{${MEMORY_TYPES.join(', ')}}}`,
+  'created: {{ISO date, e.g., "2026-05-21"}}',
+  'updated: {{ISO date}}',
+  'layer: {{hierarchical path, e.g., "compiler-frontend/parser"}}',
+  'scope: {{single-layer | cross-layer | project-wide}}',
+  'complexity: {{simple | complex}}',
+  'status: {{active | resolved | deprecated}}',
+  'related:',
+  '  - {{relative path to associated file}}',
+  'parents:',
+  '  - {{relative path to parent LAYER.md}}',
   '---',
   '',
   '{{memory content — for feedback/project types, structure as: rule/fact, then **Why:** and **How to apply:** lines}}',

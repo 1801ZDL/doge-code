@@ -39,7 +39,10 @@ export async function scanMemoryFiles(
   try {
     const entries = await readdir(memoryDir, { recursive: true })
     const mdFiles = entries.filter(
-      f => f.endsWith('.md') && basename(f) !== 'MEMORY.md',
+      f =>
+        f.endsWith('.md') &&
+        basename(f) !== 'MEMORY.md' &&
+        basename(f) !== 'LAYER.md',
     )
 
     const headerResults = await Promise.allSettled(
