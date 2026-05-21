@@ -28,6 +28,73 @@ import {
 import type { RelevantMemory } from './findRelevantMemories.js'
 
 // =============================================================================
+// Query Complexity Classification
+// =============================================================================
+
+/**
+ * Thrown when a query is classified as simple (does not need hierarchical search).
+ * Callers should catch this and fall back to flat recall.
+ */
+export class HMF_SimpleQueryError extends Error {
+  constructor(query: string) {
+    super(`Query classified as simple, no hierarchical search needed: ${query}`)
+    this.name = 'HMF_SimpleQueryError'
+  }
+}
+
+/**
+ * Heuristic query complexity classifier.
+ *
+ * Simple queries (e.g. "上次那个bug怎么修的？") don't need multi-layer
+ * traversal — flat recall is faster (~1s vs ~4-5s).
+ *
+ * Complex signals take priority over simple signals to avoid missing
+ * cross-layer information.
+ */
+export function classifyQueryComplexity(query: string): 'simple' | 'complex' {
+  const lower = query.toLowerCase()
+
+  // Complex signals — satisfy any one → complex
+  const complexSignals: Array<RegExp | ((q: string) => boolean)> = [
+    /(集成|整合|联动|交互)/,
+    /(架构|设计|重构|迁移)/,
+    /(多层|分层|上下游|端到端)/,
+    /(对比|比较|区别|差异)/,
+    /(为什么|原因|根因|分析)/,
+    q => q.length > 80,
+    /(v\d+|版本\d+)/,
+    /(pass|module|layer|stage)/i,
+  ]
+
+  for (const signal of complexSignals) {
+    const matched =
+      typeof signal === 'function' ? signal(lower) : signal.test(lower)
+    if (matched) return 'complex'
+  }
+
+  // Simple signals — satisfy any one → simple
+  const simpleSignals: Array<RegExp | ((q: string) => boolean)> = [
+    /^上次.*(怎么|如何|什么)/,
+    /^(那个|这个).*(呢|吗)/,
+    /^(查看|给我|找一下).*/,
+    /^帮助.*回忆/,
+    /^对/,
+    /^还有/,
+    q => q.length < 20,
+  ]
+
+  for (const signal of simpleSignals) {
+    const matched =
+      typeof signal === 'function' ? signal(lower) : signal.test(lower)
+    if (matched) return 'simple'
+  }
+
+  // Default: medium-length queries are treated as complex to avoid missing
+  // information (prefer false-positive complex over false-negative simple).
+  return lower.length > 40 ? 'complex' : 'simple'
+}
+
+// =============================================================================
 // Types
 // =============================================================================
 
@@ -310,6 +377,12 @@ export async function findHierarchicalMemories(
     parallelBranches?: boolean
   },
 ): Promise<RelevantMemory[]> {
+  // P0: Adaptive recall depth — skip hierarchical search for simple queries
+  const complexity = classifyQueryComplexity(query)
+  if (complexity === 'simple') {
+    throw new HMF_SimpleQueryError(query)
+  }
+
   const ctx: SearchContext = {
     query,
     memoryDir,

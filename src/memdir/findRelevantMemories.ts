@@ -12,6 +12,7 @@ import {
 import {
   findHierarchicalMemories,
   hasHierarchicalStructure,
+  HMF_SimpleQueryError,
 } from './findHierarchicalMemories.js'
 
 export type RelevantMemory = {
@@ -61,11 +62,20 @@ export async function findRelevantMemories(
       if (signal.aborted) {
         return []
       }
-      logForDebugging(
-        `[memdir] Hierarchical recall failed, falling back to flat: ${errorMessage(e)}`,
-        { level: 'warn' },
-      )
-      // Fall through to flat recall below
+      // P0: Simple query → silently fall back to flat recall (no hierarchical search needed)
+      if (e instanceof HMF_SimpleQueryError) {
+        logForDebugging(
+          `[memdir] Simple query detected, using flat recall: ${e.message}`,
+          { level: 'debug' },
+        )
+        // Fall through to flat recall below
+      } else {
+        logForDebugging(
+          `[memdir] Hierarchical recall failed, falling back to flat: ${errorMessage(e)}`,
+          { level: 'warn' },
+        )
+        // Fall through to flat recall below
+      }
     }
   }
 
