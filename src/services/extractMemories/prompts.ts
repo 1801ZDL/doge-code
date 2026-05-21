@@ -11,6 +11,7 @@
 
 import { feature } from 'bun:bundle'
 import {
+  HMF_SAVE_GUIDANCE,
   MEMORY_FRONTMATTER_EXAMPLE,
   TYPES_SECTION_COMBINED,
   TYPES_SECTION_INDIVIDUAL,
@@ -60,7 +61,9 @@ export function buildExtractAutoOnlyPrompt(
         '',
         ...MEMORY_FRONTMATTER_EXAMPLE,
         '',
-        '- Organize memory semantically by topic, not chronologically',
+        ...HMF_SAVE_GUIDANCE,
+        '',
+        '- Organize memory semantically by topic, not chronologically. You may create subdirectories for different layers or domains',
         '- Update or remove memories that turn out to be wrong or outdated',
         '- Do not write duplicate memories. First check if there is an existing memory you can update before writing a new one.',
       ]
@@ -73,10 +76,12 @@ export function buildExtractAutoOnlyPrompt(
         '',
         ...MEMORY_FRONTMATTER_EXAMPLE,
         '',
+        ...HMF_SAVE_GUIDANCE,
+        '',
         '**Step 2** — add a pointer to that file in `MEMORY.md`. `MEMORY.md` is an index, not a memory — each entry should be one line, under ~150 characters: `- [Title](file.md) — one-line hook`. It has no frontmatter. Never write memory content directly into `MEMORY.md`.',
         '',
         '- `MEMORY.md` is always loaded into your system prompt — lines after 200 will be truncated, so keep the index concise',
-        '- Organize memory semantically by topic, not chronologically',
+        '- Organize memory semantically by topic, not chronologically. You may create subdirectories for different layers or domains',
         '- Update or remove memories that turn out to be wrong or outdated',
         '- Do not write duplicate memories. First check if there is an existing memory you can update before writing a new one.',
       ]
@@ -119,7 +124,9 @@ export function buildExtractCombinedPrompt(
         '',
         ...MEMORY_FRONTMATTER_EXAMPLE,
         '',
-        '- Organize memory semantically by topic, not chronologically',
+        ...HMF_SAVE_GUIDANCE,
+        '',
+        '- Organize memory semantically by topic, not chronologically. You may create subdirectories for different layers or domains',
         '- Update or remove memories that turn out to be wrong or outdated',
         '- Do not write duplicate memories. First check if there is an existing memory you can update before writing a new one.',
       ]
@@ -132,10 +139,12 @@ export function buildExtractCombinedPrompt(
         '',
         ...MEMORY_FRONTMATTER_EXAMPLE,
         '',
+        ...HMF_SAVE_GUIDANCE,
+        '',
         "**Step 2** — add a pointer to that file in the same directory's `MEMORY.md`. Each directory (private and team) has its own `MEMORY.md` index — each entry should be one line, under ~150 characters: `- [Title](file.md) — one-line hook`. They have no frontmatter. Never write memory content directly into a `MEMORY.md`.",
         '',
         '- Both `MEMORY.md` indexes are loaded into your system prompt — lines after 200 will be truncated, so keep them concise',
-        '- Organize memory semantically by topic, not chronologically',
+        '- Organize memory semantically by topic, not chronologically. You may create subdirectories for different layers or domains',
         '- Update or remove memories that turn out to be wrong or outdated',
         '- Do not write duplicate memories. First check if there is an existing memory you can update before writing a new one.',
       ]

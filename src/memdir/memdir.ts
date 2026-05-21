@@ -24,6 +24,7 @@ import { formatFileSize } from '../utils/format.js'
 import { getProjectDir } from '../utils/sessionStorage.js'
 import { getInitialSettings } from '../utils/settings/settings.js'
 import {
+  HMF_SAVE_GUIDANCE,
   MEMORY_FRONTMATTER_EXAMPLE,
   TRUSTING_RECALL_SECTION,
   TYPES_SECTION_INDIVIDUAL,
@@ -94,7 +95,7 @@ export function truncateEntrypointContent(raw: string): EntrypointTruncation {
   return {
     content:
       truncated +
-      `\n\n> WARNING: ${ENTRYPOINT_NAME} is ${reason}. Only part of it was loaded. Keep index entries to one line under ~200 chars; move detail into topic files.`,
+      `\n\n> WARNING: ${ENTRYPOINT_NAME} is ${reason}. Only part of it was loaded. Keep index entries to one line under ~200 chars; move detail into topic files or layer subdirectories.`,
     lineCount,
     byteCount,
     wasLineTruncated,
@@ -210,8 +211,10 @@ export function buildMemoryLines(
         '',
         ...MEMORY_FRONTMATTER_EXAMPLE,
         '',
+        ...HMF_SAVE_GUIDANCE,
+        '',
         '- Keep the name, description, and type fields in memory files up-to-date with the content',
-        '- Organize memory semantically by topic, not chronologically',
+        '- Organize memory semantically by topic, not chronologically. You may create subdirectories for different layers or domains',
         '- Update or remove memories that turn out to be wrong or outdated',
         '- Do not write duplicate memories. First check if there is an existing memory you can update before writing a new one.',
       ]
@@ -224,11 +227,13 @@ export function buildMemoryLines(
         '',
         ...MEMORY_FRONTMATTER_EXAMPLE,
         '',
+        ...HMF_SAVE_GUIDANCE,
+        '',
         `**Step 2** — add a pointer to that file in \`${ENTRYPOINT_NAME}\`. \`${ENTRYPOINT_NAME}\` is an index, not a memory — each entry should be one line, under ~150 characters: \`- [Title](file.md) — one-line hook\`. It has no frontmatter. Never write memory content directly into \`${ENTRYPOINT_NAME}\`.`,
         '',
         `- \`${ENTRYPOINT_NAME}\` is always loaded into your conversation context — lines after ${MAX_ENTRYPOINT_LINES} will be truncated, so keep the index concise`,
         '- Keep the name, description, and type fields in memory files up-to-date with the content',
-        '- Organize memory semantically by topic, not chronologically',
+        '- Organize memory semantically by topic, not chronologically. You may create subdirectories for different layers or domains',
         '- Update or remove memories that turn out to be wrong or outdated',
         '- Do not write duplicate memories. First check if there is an existing memory you can update before writing a new one.',
       ]

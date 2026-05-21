@@ -320,3 +320,31 @@ export const MEMORY_FRONTMATTER_EXAMPLE: readonly string[] = [
   '{{memory content — for feedback/project types, structure as: rule/fact, then **Why:** and **How to apply:** lines}}',
   '```',
 ]
+
+/**
+ * Hierarchical Memory Framework (HMF) save guidance.
+ * Injected after the frontmatter example in both extraction and system prompts.
+ */
+export const HMF_SAVE_GUIDANCE: readonly string[] = [
+  '### Hierarchical organization',
+  '',
+  'Memories can be organized in a hierarchical directory structure:',
+  '- If a memory belongs to a known layer (e.g., `compiler-frontend/parser`), write it to the corresponding subdirectory',
+  '- Subdirectory names use kebab-case (e.g., `compiler-frontend/parser/`)',
+  '- If you are writing a layer description file, set `type: layer`, name the file `LAYER.md`, and place it in the corresponding layer directory',
+  '',
+  '### Frontmatter fields for hierarchical context',
+  '',
+  '- `type: layer` — use only for LAYER.md hierarchy description files',
+  '- `layer` — the hierarchical path this memory belongs to (e.g., `compiler-frontend/parser`)',
+  '- `scope` — impact: `single-layer` (one layer), `cross-layer` (spans multiple layers), or `project-wide`',
+  '- `complexity` — `simple` (single layer) or `complex` (cross-layer, should be split into multiple files)',
+  '- `related` — list of associated memory file paths (relative paths)',
+  '- `created` / `updated` — ISO dates for tracking freshness',
+  '',
+  '### Splitting complex memories',
+  '',
+  'If a memory involves multiple layers, set `complexity: complex` and:',
+  '- Split it into focused sub-files, one per relevant layer, placed in the appropriate subdirectories',
+  '- Create an aggregation file in `cross-layer/` that links to all sub-files via the `related` field',
+]
