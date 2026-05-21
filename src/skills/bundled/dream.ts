@@ -13,17 +13,18 @@ export function registerDreamSkill(): void {
   }
 
   const allowedTools = [
-    // Read-only tools only — no Edit, Write, Bash (except read-only commands)
     'Read',
     'Glob',
     'Grep',
+    'Edit',
+    'Write',
   ]
 
   registerBundledSkill({
     name: 'dream',
     description:
       'Consolidate scattered session history into durable memories. ' +
-      'Scans transcript files, updates memory files, and prunes the index. ' +
+      'Scans transcript files, updates memory files, prunes the index, and maintains hierarchical layer structure. ' +
       'Use this when memory feels stale or sessions have accumulated new signal.',
     whenToUse:
       'Use /dream after a period of active development, when you notice ' +
@@ -47,9 +48,9 @@ export function registerDreamSkill(): void {
 
       const toolConstraints = `
 
-**Tool constraints for this run:** Bash is restricted to read-only commands (\`ls\`, \`find\`, \`grep\`, \`cat\`, \`stat\`, \`wc\`, \`head\`, \`tail\`, and similar). File edits and writes are ALLOWED — this is a consolidation run and you SHOULD update memory files directly.
+**Tool constraints for this run:** File edits and writes are ALLOWED — this is a consolidation run and you SHOULD update memory files directly, including in subdirectories.
 
-Do NOT use any tools other than: Read, Glob, Grep, Bash (read-only commands only), Edit, Write.`
+You may use: Read, Glob, Grep, Edit, Write.`
 
       const extra = args ? `\n\n## User's focus\n\n${args}` : ''
       const prompt = buildConsolidationPrompt(memoryRoot, transcriptDir, toolConstraints + extra)

@@ -43,7 +43,19 @@ Don't exhaustively read transcripts. Look only for things you already suspect ma
 
 ## Phase 3 — Consolidate
 
-For each thing worth remembering, write or update a memory file at the top level of the memory directory. Use the memory file format and type conventions from your system prompt's auto-memory section — it's the source of truth for what to save, how to structure it, and what NOT to save.
+For each thing worth remembering, write or update a memory file. Memories may live at the top level or within subdirectories (layers) of the memory directory. Use the memory file format and type conventions from your system prompt's auto-memory section — it's the source of truth for what to save, how to structure it, and what NOT to save.
+
+**Hierarchical organization:**
+- If the memory directory uses a layered structure (subdirectories with \`LAYER.md\` files), place each memory in the most appropriate layer
+- If a memory clearly belongs to an existing subdirectory, write it there rather than at the top level
+- If an existing memory would be better organized in a different layer, move it (use the Write tool to create it at the new location, then remove the old file)
+- When writing to a subdirectory, include a \`layer\` frontmatter field with the layer path (e.g., \`layer: "project/active-features"\`)
+
+**Layer restructuring (do when needed):**
+- Create new subdirectories when a new clearly separable theme emerges
+- Merge or rename subdirectories when their boundaries have become blurry or names are no longer accurate
+- Trigger conditions for restructuring: a layer contains more than 20 files, a new distinct topic has accumulated enough signal to warrant its own layer, or a layer's name no longer reflects its contents
+- When restructuring, update the \`layer\` frontmatter field in moved files, update \`parents\` references in LAYER.md files, and update \`related\` associations as needed
 
 Focus on:
 - Merging new signal into existing topic files rather than creating near-duplicates
@@ -58,6 +70,16 @@ Update \`${ENTRYPOINT_NAME}\` so it stays under ${MAX_ENTRYPOINT_LINES} lines AN
 - Demote verbose entries: if an index line is over ~200 chars, it's carrying content that belongs in the topic file — shorten the line, move the detail
 - Add pointers to newly important memories
 - Resolve contradictions — if two files disagree, fix the wrong one
+
+**LAYER.md maintenance (for hierarchical structures):**
+If the memory directory has subdirectories with \`LAYER.md\` files, update each affected \`LAYER.md\`:
+- \`## Summary\`: 2-3 sentences describing what memories live in this layer and their common theme
+- \`## Keywords\`: 10-20 keywords/tags covering the semantic range of this layer (include synonyms)
+- \`## Sub-layers\`: list of subdirectories with one-line summaries and file counts
+- \`## Statistics\`: total files, type breakdown, last updated date, active topics
+- Keep \`LAYER.md\` concise and accurate — it guides the hierarchical recall algorithm
+
+Root \`${ENTRYPOINT_NAME}\` remains the high-level index listing top-level layers. Each layer's \`LAYER.md\` serves as a local index for that branch.
 
 ---
 
