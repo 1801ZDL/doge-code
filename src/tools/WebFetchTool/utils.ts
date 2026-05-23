@@ -173,7 +173,7 @@ type DomainCheckResult =
   | { status: 'blocked' }
   | { status: 'check_failed'; error: Error }
 
-// [DOGE-CODE MODIFIED] - Removed Anthropic preflight check
+// [DL-CODE MODIFIED] - Removed Anthropic preflight check
 // Domain blocklist check always returns allowed to decouple from Anthropic
 export async function checkDomainBlocklist(
   domain: string,

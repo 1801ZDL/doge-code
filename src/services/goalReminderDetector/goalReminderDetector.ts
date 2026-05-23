@@ -71,7 +71,7 @@ Like CLAUDE.md, once \`findings.md\` exists, the model will be reminded to check
 
 Key findings to record:
 - "Line 42 in src/auth/validate.ts: null pointer when session expires"
-- "Config location: ~/.config/doge/mcp.json"
+- "Config location: ~/.config/dl/mcp.json"
 - "API returns 404 when missing trailing slash"
 
 Create findings.md once = benefit forever. Check it every reminder.`,

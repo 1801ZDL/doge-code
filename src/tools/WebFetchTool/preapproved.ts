@@ -11,7 +11,7 @@
 // See test/utils/sandbox/webfetch-preapproved-separation.test.ts for verification
 // that sandbox network restrictions require explicit user permission rules.
 
-// [DOGE-CODE MODIFIED] - Added more domains for open-source AI ecosystem
+// [DL-CODE MODIFIED] - Added more domains for open-source AI ecosystem
 export const PREAPPROVED_HOSTS = new Set([
   // Anthropic (keeping for compatibility)
   'platform.claude.com',
@@ -20,7 +20,7 @@ export const PREAPPROVED_HOSTS = new Set([
   'github.com/anthropics',
   'agentskills.io',
 
-  // Chinese AI Platforms - [DOGE-CODE ADDED]
+  // Chinese AI Platforms - [DL-CODE ADDED]
   'modelscope.cn',
   'www.modelscope.cn',
   'z.ai',
@@ -37,7 +37,7 @@ export const PREAPPROVED_HOSTS = new Set([
   'www.arxiv.org',
   'github.com',
 
-  // Unsloth & Open Source LLMs - [DOGE-CODE ADDED]
+  // Unsloth & Open Source LLMs - [DL-CODE ADDED]
   'unsloth.ai',
   'www.unsloth.ai',
   'ollama.com',
@@ -51,7 +51,7 @@ export const PREAPPROVED_HOSTS = new Set([
   'anthropic.com',
   'www.anthropic.com',
 
-  // Open Source AI Search - [DOGE-CODE ADDED]
+  // Open Source AI Search - [DL-CODE ADDED]
   'phind.com',
   'www.phind.com',
   'perplexity.ai',
