@@ -248,13 +248,19 @@ export async function countToolDefinitionTokens(
     ),
   )
   const result = await countTokensWithFallback([], toolSchemas)
-  if (result === null || result === 0) {
-    const toolNames = tools.map(t => t.name).join(', ')
-    logForDebugging(
-      `countToolDefinitionTokens returned ${result} for ${tools.length} tools: ${toolNames.slice(0, 100)}${toolNames.length > 100 ? '...' : ''}`,
-    )
+
+  if (result !== null) {
+    return result
   }
-  return result ?? 0
+
+  const toolNames = tools.map(t => t.name).join(', ')
+  logForDebugging(
+    `countToolDefinitionTokens returned null for ${tools.length} tools: ${toolNames.slice(0, 100)}${toolNames.length > 100 ? '...' : ''}`,
+  )
+  return toolSchemas.reduce(
+    (sum, schema) => sum + roughTokenCountEstimation(jsonStringify(schema)),
+    0,
+  )
 }
 
 /** Extract a human-readable name from a system prompt section's content */
@@ -297,20 +303,21 @@ async function countSystemTokens(
   }
 
   const systemTokenCounts = await Promise.all(
-    namedEntries.map(({ content }) =>
-      countTokensWithFallback([{ role: 'user', content }], []),
-    ),
+    namedEntries.map(async ({ content }) => {
+      const tokens = await countTokensWithFallback([{ role: 'user', content }], [])
+      return tokens ?? roughTokenCountEstimation(content)
+    }),
   )
 
   const systemPromptSections: SystemPromptSectionDetail[] = namedEntries.map(
     (entry, i) => ({
       name: entry.name,
-      tokens: systemTokenCounts[i] || 0,
+      tokens: systemTokenCounts[i],
     }),
   )
 
   const systemPromptTokens = systemTokenCounts.reduce(
-    (sum: number, tokens) => sum + (tokens || 0),
+    (sum: number, tokens) => sum + tokens,
     0,
   )
 
@@ -344,7 +351,10 @@ async function countMemoryFileTokens(): Promise<{
         [],
       )
 
-      return { file, tokens: tokens || 0 }
+      return {
+        file,
+        tokens: tokens ?? roughTokenCountEstimation(file.content),
+      }
     }),
   )
 
@@ -742,26 +752,28 @@ async function countCustomAgentTokens(agentDefinitions: {
   let agentTokens = 0
 
   const tokenCounts = await Promise.all(
-    customAgents.map(agent =>
-      countTokensWithFallback(
+    customAgents.map(async agent => {
+      const content = [agent.agentType, agent.whenToUse].join(' ')
+      const tokens = await countTokensWithFallback(
         [
           {
             role: 'user',
-            content: [agent.agentType, agent.whenToUse].join(' '),
+            content,
           },
         ],
         [],
-      ),
-    ),
+      )
+      return tokens ?? roughTokenCountEstimation(content)
+    }),
   )
 
   for (const [i, agent] of customAgents.entries()) {
-    const tokens = tokenCounts[i] || 0
-    agentTokens += tokens || 0
+    const tokens = tokenCounts[i]
+    agentTokens += tokens
     agentDetails.push({
       agentType: agent.agentType,
       source: agent.source,
-      tokens: tokens || 0,
+      tokens,
     })
   }
   return { agentTokens, agentDetails }

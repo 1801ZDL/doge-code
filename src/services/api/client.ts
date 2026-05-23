@@ -16,7 +16,7 @@ import {
   getAPIProvider,
   isFirstPartyAnthropicBaseUrl,
 } from 'src/utils/model/providers.js'
-import { readCustomApiStorage } from 'src/utils/customApiStorage.js'
+import { readCustomApiStorage, getModelEndpointConfig } from 'src/utils/customApiStorage.js'
 import { getProxyFetchOptions } from 'src/utils/proxy.js'
 import {
   getIsNonInteractiveSession,
@@ -99,8 +99,11 @@ export async function getAnthropicClient({
   fetchOverride?: ClientOptions['fetch']
   source?: string
 }): Promise<Anthropic> {
-  const customApiProvider =
-    readCustomApiStorage().provider ?? getGlobalCompatProvider()
+  const customApiStorage = readCustomApiStorage()
+  const customApiProvider = customApiStorage.provider ?? getGlobalCompatProvider()
+
+  // Check for per-model endpoint config when model is specified
+  const modelSpecificConfig = model ? getModelEndpointConfig(model) : undefined
   const containerId = process.env.CLAUDE_CODE_CONTAINER_ID
   const remoteSessionId = process.env.CLAUDE_CODE_REMOTE_SESSION_ID
   const clientApp = process.env.CLAUDE_AGENT_SDK_CLIENT_APP
@@ -136,7 +139,11 @@ export async function getAnthropicClient({
   logForDebugging('[API:auth] OAuth token check complete')
 
   if (!isClaudeAISubscriber()) {
-    await configureApiKeyHeaders(defaultHeaders, getIsNonInteractiveSession())
+    await configureApiKeyHeaders(
+      defaultHeaders,
+      getIsNonInteractiveSession(),
+      modelSpecificConfig?.apiKey,
+    )
   }
 
   const resolvedFetch = buildFetch(fetchOverride, source)
@@ -302,7 +309,9 @@ export async function getAnthropicClient({
 
   // Determine authentication method based on available tokens
   const clientConfig: ConstructorParameters<typeof Anthropic>[0] = {
-    apiKey: isClaudeAISubscriber() ? null : apiKey || getAnthropicApiKey(),
+    apiKey: isClaudeAISubscriber()
+      ? null
+      : apiKey || modelSpecificConfig?.apiKey || getAnthropicApiKey(),
     authToken: isClaudeAISubscriber()
       ? getClaudeAIOAuthTokens()?.accessToken
       : undefined,
@@ -316,10 +325,9 @@ export async function getAnthropicClient({
   }
 
   // For anthropic provider with custom baseURL (e.g., sglang with anthropic format),
-  // use the baseURL from customApiStorage or ANTHROPIC_BASE_URL env var
+  // use the baseURL from modelEndpointMap, customApiStorage, or ANTHROPIC_BASE_URL env var
   if (customApiProvider === 'anthropic' && !isEnvTruthy(process.env.USE_STAGING_OAUTH)) {
-    const customApiStorage = readCustomApiStorage()
-    const customBaseURL = customApiStorage.baseURL || process.env.ANTHROPIC_BASE_URL
+    const customBaseURL = modelSpecificConfig?.baseURL || customApiStorage.baseURL || process.env.ANTHROPIC_BASE_URL
     if (customBaseURL) {
       clientConfig.baseURL = customBaseURL
     }
@@ -345,8 +353,10 @@ function getGlobalCompatProvider(): 'anthropic' | 'openai' | 'gemini' {
 async function configureApiKeyHeaders(
   headers: Record<string, string>,
   isNonInteractiveSession: boolean,
+  modelApiKey?: string,
 ): Promise<void> {
   const token =
+    modelApiKey ||
     process.env.ANTHROPIC_AUTH_TOKEN ||
     (await getApiKeyFromApiKeyHelper(isNonInteractiveSession))
   if (token) {
