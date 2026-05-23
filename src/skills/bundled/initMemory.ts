@@ -17,6 +17,66 @@ Use the Glob tool to check whether the auto-memory directory already contains fi
 - Memory root: \`{MEMORY_ROOT}\`
 - If MEMORY.md or any .md files exist, report them to the user and ask whether to overwrite, append, or cancel.
 - If the directory is empty or does not exist, proceed directly.
+- If the memory directory already has content:
+  - If the user chose OVERWRITE: proceed with overwrite logic
+  - If the user chose APPEND: proceed with append logic (consolidate/split/reorganize existing files)
+  - If the user chose CANCEL: STOP and report what exists
+
+## Mode Selection
+
+After Step 1, if the memory directory already contains .md files, the user must choose a mode:
+- **OVERWRITE**: Delete everything and rebuild from scratch (existing behavior)
+- **APPEND**: Preserve existing files, build hierarchy alongside them, and reorganize as needed
+- **CANCEL**: Stop and report what exists
+
+If the user chose **APPEND**, follow the extended steps below. If OVERWRITE or empty directory, proceed with the standard steps.
+
+### Append Mode Overview
+
+In Append mode:
+1. **Preserve** all existing .md files (do NOT delete them)
+2. **Read** all existing .md files to understand their content and relationships
+3. **Analyze** whether files should be:
+   - **Consolidated**: Multiple similar files merged into one (e.g., multiple feedback files → one consolidated feedback.md)
+   - **Split**: A file with unrelated topics divided into multiple files in different layers
+   - **Reorganized**: Moved to the appropriate layer directory
+   - **Left as-is**: Kept in root if no clear layer match
+4. **Create** the hierarchical layer structure alongside existing files
+5. **Update** all LAYER.md files to reflect actual file counts
+6. **Update** MEMORY.md to include both the layer structure and existing file references
+
+#### Consolidation Rules
+- Only consolidate files if they share the same \`type\` AND have similar content/themes
+- When merging, combine frontmatter (keep the most specific name/description)
+- When merging, combine content with clear section dividers
+- Update \`related\` fields to reference merged sources
+- After merging, keep the original files as cross-reference aggregators (with \`related\` links pointing to the merged file), OR update them to become cross-reference aggregators
+- **DO NOT** consolidate if the user might want to keep files separate
+- **Be conservative**: merge only when files are clearly duplicative
+
+#### Splitting Rules
+- Only split a file if it clearly contains 2+ unrelated topics
+- Each split part gets its own file with appropriate frontmatter, placed in the corresponding layer directory
+- The original file MUST be kept as a cross-layer aggregator (with \`related\` links to the new split files)
+- Update the original file's frontmatter to add \`related\` field referencing the new files
+- **Be conservative**: only split when topics are clearly unrelated
+
+#### Reorganization (Archival) Rules
+- Read each existing file's frontmatter to determine its type
+- Map types to target layers:
+  - \`type: user\` → \`user/\` layer
+  - \`type: feedback\` → \`feedback/\` layer
+  - \`type: project\` → \`project/\` or sub-layer based on content analysis
+  - \`type: reference\` → \`reference/\` layer
+- For \`type: project\` files, read content to determine appropriate sub-layer (architecture, features, incidents, etc.)
+- Move file to target layer directory:
+  - Use Read to read the original file
+  - Use Write to create the file in the new location with updated frontmatter (add \`layer\` field)
+  - Use Edit to update the original file to become a cross-reference aggregator (add \`related\` link), OR keep the original as-is if it is already in a reasonable location
+- Update the target layer's LAYER.md:
+  - Increment fileCount in the \`json:sublayers\` block
+  - Update the sub-layer list entry to show the correct file count
+- Update parent LAYER.md files up the chain to reflect new file counts
 
 ## Step 2: Scan Project Structure
 
@@ -175,6 +235,66 @@ updated: {ISO_DATE}
 - For deeper layers, the parent link should point up to the parent's LAYER.md (e.g., \`[← Frontend](../../LAYER.md)\` or \`[← Frontend](../LAYER.md)\` depending on depth).
 - Date format: YYYY-MM-DD (e.g., 2026-05-21).
 
+### File Operations for Append Mode
+
+When reorganizing existing files in Append mode, use these specific tool operations:
+
+**To move a file to a layer (Recommended: Option A):**
+1. Use Read to read the original file content and frontmatter
+2. Use Write to create the file in the new layer location with:
+   - Updated frontmatter: add \`layer\` field with the target layer path
+   - Same content as original
+3. Use Edit to update the original file to become a cross-reference aggregator:
+   - Replace content with a pointer to the new location
+   - Add \`related\` field in frontmatter pointing to the new file
+   - Example aggregator content: \`Moved to [{new_name}](./{layer_path}/{new_name}.md)\`
+4. Update the target layer's LAYER.md to reflect the new file count
+
+**To merge files:**
+1. Read all files to be merged
+2. Analyze frontmatter:
+   - Use the most specific \`name\` and \`description\`
+   - Combine \`related\` fields from all sources
+   - Set \`type\` to the common type
+   - Add \`layer\` field for the target layer
+3. Combine content with clear section dividers:
+   - Use \`---\` or \`## Section: {source_name}\` between merged parts
+   - Preserve original content as much as possible
+4. Write the merged file to the target layer using Write
+5. For each original file, use Edit to convert it to a cross-reference aggregator:
+   - Update frontmatter with \`related: ["./{target_layer}/{merged_file}.md"]\`
+   - Replace body with: \`Consolidated into [{merged_name}](./{target_layer}/{merged_file}.md)\`
+6. Update target layer's LAYER.md file count
+
+**To split a file:**
+1. Read the original file
+2. Identify distinct topics/sections (each should be self-contained)
+3. For each topic:
+   - Create a new file in the appropriate layer using Write
+   - Write appropriate frontmatter with \`type\`, \`name\`, \`description\`, \`layer\`
+   - Write the topic-specific content
+4. Use Edit to update the original file:
+   - Keep original frontmatter
+   - Add \`related\` field listing all new split files
+   - Replace body with a cross-reference aggregator:
+     \`\`\`markdown
+     ## Split Topics
+     - [{topic1}](./{layer1}/{file1}.md)
+     - [{topic2}](./{layer2}/{file2}.md)
+     \`\`\`
+5. Update all affected layer LAYER.md file counts
+
+**To leave a file as-is:**
+- Simply note it in the report as "Left as-is"
+- Do not modify the file
+- If it is in the root directory, it will remain there
+
+**Important constraints:**
+- NEVER delete existing .md files (always convert to aggregators or leave as-is)
+- ALWAYS preserve original frontmatter key fields (\`name\`, \`description\`, \`type\`)
+- ALWAYS update \`json:sublayers\` in LAYER.md when files are added to a layer
+- ALWAYS update parent LAYER.md files up the chain with new file counts
+
 ## Step 7: Write MEMORY.md Root Index
 
 Write the root \`MEMORY.md\` at \`{MEMORY_ROOT}/MEMORY.md\`:
@@ -212,12 +332,46 @@ _Reserved for cross-layer aggregation issues. None yet._
 
 ## Step 8: Report Results
 
-After creating everything, report to the user:
+After creating everything, report to the user.
+
+### Standard Mode Report
+
 1. How many top-level layers were created.
 2. How many total layers (including sub-layers).
 3. Maximum depth of the hierarchy.
 4. The names of all top-level layers.
 5. A confirmation message: "Hierarchical memory framework initialized. You can now start recording memories. Use /dream to consolidate memories periodically."
+
+### Append Mode Report
+
+If running in Append mode, use this format:
+
+\`\`\`markdown
+## Results
+
+1. **Layers created**: X top-level, Y total (max depth Z)
+2. **Existing files processed**: N total
+   - Consolidated: A files → B files
+   - Split: C files → D files
+   - Reorganized: E files moved to layers
+   - Left as-is: F files
+3. **New structure**:
+   - Top-level layers: [list]
+4. **Files by layer**:
+   - \`layer-name/\`: [file1.md, file2.md, ...]
+5. **Cross-layer aggregators**: [list if any]
+\`\`\`
+
+**Append Mode Report Requirements:**
+- **Layers created**: Report the number of top-level layers, total layers, and maximum depth of the hierarchy.
+- **Existing files processed**: Report the total number of existing .md files that were analyzed.
+  - **Consolidated**: Report how many original files were merged into how many consolidated files. List the original files and the resulting merged file.
+  - **Split**: Report how many original files were split into how many new files. List the original files and the resulting split files.
+  - **Reorganized**: Report how many files were moved to layer directories. List each file and its new location.
+  - **Left as-is**: Report how many files were kept in their original location. List these files.
+- **Files by layer**: For each layer (including root), list all .md files now present in that layer.
+- **Cross-layer aggregators**: List any files that were converted to cross-reference aggregators (with \`related\` links). Include their paths and what they point to.
+- **Confirmation message**: "Hierarchical memory framework updated in Append mode. Existing files preserved and reorganized. Use /dream to consolidate memories periodically."
 
 ## Tool Constraints
 
@@ -225,7 +379,10 @@ You have access to: Read, Glob, Grep, Bash, Edit, Write.
 - Use Glob for scanning, Read for config files, Write for creating LAYER.md and MEMORY.md, Bash for mkdir.
 - Do NOT modify any files outside the memory directory.
 - Do NOT read source code files (only config files and README/CLAUDE.md).
-- If the memory directory already has content and the user did not confirm overwrite, STOP and report what exists.
+- If the memory directory already has content:
+  - If the user chose OVERWRITE: proceed with overwrite logic (existing behavior)
+  - If the user chose APPEND: proceed with append logic (new behavior below)
+  - If the user chose CANCEL: STOP and report what exists
 `
 
 export function registerInitMemorySkill(): void {
