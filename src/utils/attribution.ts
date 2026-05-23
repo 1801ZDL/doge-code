@@ -67,15 +67,8 @@ export function getAttributionTexts(): AttributionTexts {
     return { commit: '', pr: '' }
   }
 
-  // @[MODEL LAUNCH]: Update the hardcoded fallback model name below (guards against codename leaks).
-  // For internal repos, use the real model name. For external repos,
-  // fall back to "Claude Opus 4.6" for unrecognized models to avoid leaking codenames.
   const model = getMainLoopModel()
-  const isKnownPublicModel = getPublicModelDisplayName(model) !== null
-  const modelName =
-    isInternalModelRepoCached() || isKnownPublicModel
-      ? getPublicModelName(model)
-      : 'Claude Opus 4.6'
+  const modelName = getPublicModelName(model)
   const defaultAttribution = `🤖 Generated with [Claude Code](${PRODUCT_URL})`
   const defaultCommit = `Co-Authored-By: ${modelName} <noreply@anthropic.com>`
 
@@ -381,11 +374,16 @@ export async function getEnhancedPRAttribution(
   // squash commit body verbatim — trailer lines at the end become proper git
   // trailers on the squash commit.
   if (feature('COMMIT_ATTRIBUTION') && isInternal && attributionData) {
-    const { buildPRTrailers } = await import('./attributionTrailer.js')
-    const trailers = buildPRTrailers(attributionData, appState.attribution)
-    const result = `${summary}\n\n${trailers.join('\n')}`
-    logForDebugging(`PR Attribution: returning with trailers: ${result}`)
-    return result
+    try {
+      const modulePath = './attributionTrailer.js'
+      const { buildPRTrailers } = await import(modulePath)
+      const trailers = buildPRTrailers(attributionData, appState.attribution)
+      const result = `${summary}\n\n${trailers.join('\n')}`
+      logForDebugging(`PR Attribution: returning with trailers: ${result}`)
+      return result
+    } catch {
+      // Module not available; fall through to plain summary
+    }
   }
 
   logForDebugging(`PR Attribution: returning summary: ${summary}`)

@@ -20,6 +20,10 @@ import {
 } from '../context.js'
 import { isEnvTruthy } from '../envUtils.js'
 import { getModelStrings, resolveOverriddenModel } from './modelStrings.js'
+import {
+  getAntModelOverrideConfig,
+  resolveAntModel,
+} from './antModels.js'
 import { formatModelPricing, getOpus46CostTier } from '../modelCost.js'
 import { getSettings_DEPRECATED } from '../settings/settings.js'
 import type { PermissionMode } from '../permissions/PermissionMode.js'
@@ -288,18 +292,18 @@ export function getClaudeAiUserDefaultModelDescription(
 ): string {
   if (isMaxSubscriber() || isTeamPremiumSubscriber()) {
     if (isOpus1mMergeEnabled()) {
-      return `Opus 4.6 with 1M context · Most capable for complex work${fastMode ? getOpus46PricingSuffix(true) : ''}`
+      return `${renderModelName(getDefaultOpusModel() + '[1m]')} with 1M context · Most capable for complex work${fastMode ? getOpus46PricingSuffix(true) : ''}`
     }
-    return `Opus 4.6 · Most capable for complex work${fastMode ? getOpus46PricingSuffix(true) : ''}`
+    return `${renderModelName(getDefaultOpusModel())} · Most capable for complex work${fastMode ? getOpus46PricingSuffix(true) : ''}`
   }
-  return 'Sonnet 4.6 · Best for everyday tasks'
+  return `${renderModelName(getDefaultSonnetModel())} · Best for everyday tasks`
 }
 
 export function renderDefaultModelSetting(
   setting: ModelName | ModelAlias,
 ): string {
   if (setting === 'opusplan') {
-    return 'Opus 4.6 in plan mode, else Sonnet 4.6'
+    return `${renderModelName(getDefaultOpusModel())} in plan mode, else ${renderModelName(getDefaultSonnetModel())}`
   }
   return renderModelName(parseUserSpecifiedModel(setting))
 }
@@ -345,51 +349,14 @@ export function renderModelSetting(setting: ModelName | ModelAlias): string {
 /**
  * Returns a human-readable display name for known public models, or null
  * if the model is not recognized as a public model.
+ *
+ * NOTE: This function intentionally returns null for all models so that
+ * callers fall back to displaying the raw model ID instead of a hardcoded
+ * friendly name. Preserved as a function (rather than inlined) so callers
+ * can opt into friendly names in the future without changing call sites.
  */
 export function getPublicModelDisplayName(model: ModelName): string | null {
-  switch (model) {
-    case getModelStrings().opus46:
-      return 'Opus 4.6'
-    case getModelStrings().opus46 + '[1m]':
-      return 'Opus 4.6 (1M context)'
-    case getModelStrings().opus45:
-      return 'Opus 4.5'
-    case getModelStrings().opus41:
-      return 'Opus 4.1'
-    case getModelStrings().opus40:
-      return 'Opus 4'
-    case getModelStrings().sonnet46 + '[1m]':
-      return 'Sonnet 4.6 (1M context)'
-    case getModelStrings().sonnet46:
-      return 'Sonnet 4.6'
-    case getModelStrings().sonnet45 + '[1m]':
-      return 'Sonnet 4.5 (1M context)'
-    case getModelStrings().sonnet45:
-      return 'Sonnet 4.5'
-    case getModelStrings().sonnet40:
-      return 'Sonnet 4'
-    case getModelStrings().sonnet40 + '[1m]':
-      return 'Sonnet 4 (1M context)'
-    case getModelStrings().sonnet37:
-      return 'Sonnet 3.7'
-    case getModelStrings().sonnet35:
-      return 'Sonnet 3.5'
-    case getModelStrings().haiku45:
-      return 'Haiku 4.5'
-    case getModelStrings().haiku35:
-      return 'Haiku 3.5'
-    default:
-      return null
-  }
-}
-
-function maskModelCodename(baseName: string): string {
-  // Mask only the first dash-separated segment (the codename), preserve the rest
-  // e.g. capybara-v2-fast → cap*****-v2-fast
-  const [codename = '', ...rest] = baseName.split('-')
-  const masked =
-    codename.slice(0, 3) + '*'.repeat(Math.max(0, codename.length - 3))
-  return [masked, ...rest].join('-')
+  return null
 }
 
 export function renderModelName(model: ModelName): string {
@@ -397,37 +364,24 @@ export function renderModelName(model: ModelName): string {
   if (publicName) {
     return publicName
   }
-  if (process.env.USER_TYPE === 'ant') {
-    const resolved = parseUserSpecifiedModel(model)
-    const antModel = resolveAntModel(model)
-    if (antModel) {
-      const baseName = antModel.model.replace(/\[1m\]$/i, '')
-      const masked = maskModelCodename(baseName)
-      const suffix = has1mContext(resolved) ? '[1m]' : ''
-      return masked + suffix
-    }
-    if (resolved !== model) {
-      return `${model} (${resolved})`
-    }
-    return resolved
-  }
-  return model
+  // Strip the [1m] suffix so the displayed name is the raw model ID
+  return model.replace(/\[1m\]$/i, '')
 }
 
 /**
  * Returns a safe author name for public display (e.g., in git commit trailers).
- * Returns "Claude {ModelName}" for publicly known models, or "Claude ({model})"
- * for unknown/internal models so the exact model name is preserved.
+ * Uses renderModelName so the displayed name is the raw model ID rather than a
+ * hardcoded friendly name.
  *
  * @param model The full model name
- * @returns "Claude {ModelName}" for public models, or "Claude ({model})" for non-public models
+ * @returns "Claude {renderModelName(model)}" for all models
  */
 export function getPublicModelName(model: ModelName): string {
   const publicName = getPublicModelDisplayName(model)
   if (publicName) {
     return `Claude ${publicName}`
   }
-  return `Claude (${model})`
+  return `Claude ${renderModelName(model)}`
 }
 
 /**
@@ -567,47 +521,25 @@ export function modelDisplayString(model: ModelSetting): string {
 }
 
 // @[MODEL LAUNCH]: Add a marketing name mapping for the new model below.
+/**
+ * Returns the canonical model ID for known Anthropic models, or undefined
+ * for unknown/non-Anthropic models (e.g. Foundry deployment IDs).
+ *
+ * Previously returned hardcoded friendly names ("Opus 4.6", "Sonnet 4.6").
+ * Now returns the raw canonical ID so system prompts and model options
+ * display the actual model identifier.
+ */
 export function getMarketingNameForModel(modelId: string): string | undefined {
   if (getAPIProvider() === 'foundry') {
     // deployment ID is user-defined in Foundry, so it may have no relation to the actual model
     return undefined
   }
 
-  const has1m = modelId.toLowerCase().includes('[1m]')
   const canonical = getCanonicalName(modelId)
 
-  if (canonical.includes('claude-opus-4-6')) {
-    return has1m ? 'Opus 4.6 (with 1M context)' : 'Opus 4.6'
-  }
-  if (canonical.includes('claude-opus-4-5')) {
-    return 'Opus 4.5'
-  }
-  if (canonical.includes('claude-opus-4-1')) {
-    return 'Opus 4.1'
-  }
-  if (canonical.includes('claude-opus-4')) {
-    return 'Opus 4'
-  }
-  if (canonical.includes('claude-sonnet-4-6')) {
-    return has1m ? 'Sonnet 4.6 (with 1M context)' : 'Sonnet 4.6'
-  }
-  if (canonical.includes('claude-sonnet-4-5')) {
-    return has1m ? 'Sonnet 4.5 (with 1M context)' : 'Sonnet 4.5'
-  }
-  if (canonical.includes('claude-sonnet-4')) {
-    return has1m ? 'Sonnet 4 (with 1M context)' : 'Sonnet 4'
-  }
-  if (canonical.includes('claude-3-7-sonnet')) {
-    return 'Claude 3.7 Sonnet'
-  }
-  if (canonical.includes('claude-3-5-sonnet')) {
-    return 'Claude 3.5 Sonnet'
-  }
-  if (canonical.includes('claude-haiku-4-5')) {
-    return 'Haiku 4.5'
-  }
-  if (canonical.includes('claude-3-5-haiku')) {
-    return 'Claude 3.5 Haiku'
+  // Return the canonical ID for known Anthropic models
+  if (canonical.startsWith('claude-')) {
+    return canonical
   }
 
   return undefined
