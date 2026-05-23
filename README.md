@@ -40,7 +40,51 @@
 - 尽量把自定义接入数据收口到 [`~/.doge`](README.md) 路径体系
 - 在保留 CLI/TUI 主体结构的前提下，降低对官方登录流的绑定
 
-换句话说，它现在更像一个“可自托管 / 可代理 / 可转接”的 [`Claude Code`](README.md) 变体。
+换句话说，它现在更像一个”可自托管 / 可代理 / 可转接”的 [`Claude Code`](README.md) 变体。
+
+## 通用分层记忆框架（HMF）
+
+本 Fork 加入了**通用分层记忆框架（Hierarchical Memory Framework, HMF）**，用于在项目中长期积累、组织和联想式检索记忆。
+
+### 核心能力
+
+- **分层存储**：根据项目结构自动创建层级目录，将记忆按主题/模块/层级组织
+- **向下扩展联想**：复杂查询时从父层递归搜索到子层，支持多分支保留（gap <= 15）
+- **自适应召回**：简单查询自动走扁平召回（~1s），复杂查询才走分层召回
+- **自动初始化**：通过 `/init-memory` skill 一键扫描项目结构并生成分层框架
+- **智能整理**：Append 模式支持合并相似文件、拆分复杂文件、归档到对应层级
+
+### 使用方法
+
+**首次使用项目时初始化分层记忆：**
+
+```bash
+/init-memory
+```
+
+如果已有记忆文件，会弹出交互式选择：
+
+- **Overwrite**：重建分层结构（保留旧文件）
+- **Append**：分析并整理现有文件到对应层级
+- **Cancel**：取消操作
+
+**后续自动工作：**
+
+- 每回合对话结束后，自动提取记忆到对应层级
+- 定期 `/dream` 整合记忆，维护层级结构和索引
+- 复杂查询自动触发分层联想召回
+
+### 技术实现要点
+
+| 模块 | 说明 |
+|------|------|
+| `findHierarchicalMemories.ts` | 4 阶段召回算法（快速路径 → 根层评估 → 向下扩展 → 文件选择） |
+| `classifyQueryComplexity()` | 启发式分类：simple 走扁平，complex 走分层 |
+| `LAYER.md` | 每层描述文件，混合格式（markdown + json:sublayers） |
+| `initMemory.ts` | `/init-memory` skill，支持交互式选择 + Append 整理 |
+| `memoryTypes.ts` | 扩展 frontmatter：layer, scope, complexity, related 等字段 |
+
+记忆默认存储路径：`~/.doge/projects/<project-name>/memory/`
 
 ## 与原版 Claude Code 的数据隔离
 
