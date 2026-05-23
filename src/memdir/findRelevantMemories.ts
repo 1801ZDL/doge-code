@@ -49,7 +49,7 @@ export async function findRelevantMemories(
   alreadySurfaced: ReadonlySet<string> = new Set(),
 ): Promise<RelevantMemory[]> {
   // Hierarchical recall entry point: when feature flag is on and LAYER.md exists
-  if (feature('MEMORY_HIERARCHICAL_RECALL') && (await hasHierarchicalStructure(memoryDir))) {
+  if ((feature('MEMORY_HIERARCHICAL_RECALL') ?? true) && (await hasHierarchicalStructure(memoryDir))) {
     try {
       return await findHierarchicalMemories(
         query,
