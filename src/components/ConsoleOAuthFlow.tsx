@@ -105,7 +105,7 @@ export function ConsoleOAuthFlow({
   const [pastedCode, setPastedCode] = useState('');
   const [cursorOffset, setCursorOffset] = useState(0);
   const [customBaseURL, setCustomBaseURL] = useState(persistedCustomApiEndpoint.baseURL ?? process.env.ANTHROPIC_BASE_URL ?? '');
-  const [customApiKey, setCustomApiKey] = useState(persistedCustomApiEndpoint.apiKey ?? process.env.DOGE_API_KEY ?? '');
+  const [customApiKey, setCustomApiKey] = useState(persistedCustomApiEndpoint.apiKey ?? process.env.DL_API_KEY ?? '');
   const [customModel, setCustomModel] = useState(persistedCustomApiEndpoint.model ?? process.env.ANTHROPIC_MODEL ?? '');
   const [oauthService] = useState(() => new OAuthService());
   const [loginWithClaudeAi, setLoginWithClaudeAi] = useState(() => {
@@ -201,7 +201,7 @@ export function ConsoleOAuthFlow({
     const normalizedKey = nextApiKey ? normalizeApiKeyForConfig(nextApiKey) : null;
     const nextSavedModels = nextModel ? [...new Set([...(persistedCustomApiEndpoint.savedModels ?? []), nextModel])] : persistedCustomApiEndpoint.savedModels ?? [];
     process.env.ANTHROPIC_BASE_URL = nextBaseURL;
-    process.env.DOGE_API_KEY = nextApiKey;
+    process.env.DL_API_KEY = nextApiKey;
     process.env.ANTHROPIC_MODEL = nextModel;
 
     // Build the model-specific endpoint config for modelEndpointMap

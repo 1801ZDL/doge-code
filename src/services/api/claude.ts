@@ -1853,7 +1853,7 @@ async function* queryModel(
           }
           const reader = await createGeminiCompatStream(
             {
-              apiKey: customApiConfig.apiKey || process.env.DOGE_API_KEY || '',
+              apiKey: customApiConfig.apiKey || process.env.DL_API_KEY || '',
               baseURL: customApiConfig.baseURL || process.env.ANTHROPIC_BASE_URL || '',
               headers: clientRequestId
                 ? { [CLIENT_REQUEST_ID_HEADER]: clientRequestId }
@@ -1872,7 +1872,7 @@ async function* queryModel(
         }
         if (compatProvider === 'openai') {
           const compatConfig = {
-            apiKey: customApiConfig.apiKey || process.env.DOGE_API_KEY || '',
+            apiKey: customApiConfig.apiKey || process.env.DL_API_KEY || '',
             baseURL: customApiConfig.baseURL || process.env.ANTHROPIC_BASE_URL || '',
             headers: clientRequestId
               ? { [CLIENT_REQUEST_ID_HEADER]: clientRequestId }

@@ -29,7 +29,7 @@ function withoutSSHTunnelVars(
   const {
     ANTHROPIC_UNIX_SOCKET: _1,
     ANTHROPIC_BASE_URL: _2,
-    DOGE_API_KEY: _3,
+    DL_API_KEY: _3,
     ANTHROPIC_AUTH_TOKEN: _4,
     CLAUDE_CODE_OAUTH_TOKEN: _5,
     ...rest
@@ -229,7 +229,7 @@ function applyPersistedCustomApiEndpointEnv(): void {
   }
 
   if (endpointConfig?.apiKey) {
-    process.env.DOGE_API_KEY = endpointConfig.apiKey
+    process.env.DL_API_KEY = endpointConfig.apiKey
   }
 
   if (endpointConfig?.provider) {
