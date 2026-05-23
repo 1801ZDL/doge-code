@@ -15,21 +15,51 @@ Create a layered memory directory structure based on the project's actual code o
 Use the Glob tool to check whether the auto-memory directory already contains files.
 
 - Memory root: \`{MEMORY_ROOT}\`
-- If MEMORY.md or any .md files exist, report them to the user and ask whether to overwrite, append, or cancel.
-- If the directory is empty or does not exist, proceed directly.
-- If the memory directory already has content:
-  - If the user chose OVERWRITE: proceed with overwrite logic
-  - If the user chose APPEND: proceed with append logic (consolidate/split/reorganize existing files)
-  - If the user chose CANCEL: STOP and report what exists
+- If the directory is empty or does not exist, proceed directly to Step 2.
+- If MEMORY.md or any .md files exist:
+  1. List all existing files (using Glob or Read as needed)
+  2. Use **AskUserQuestionTool** to present an interactive choice to the user. Call the tool with this exact structure:
+
+     \`\`\`json
+     {
+       "questions": [
+         {
+           "question": "Memory files already exist in this project. What would you like to do?",
+           "header": "Init Memory",
+           "options": [
+             {
+               "label": "Overwrite",
+               "description": "Replace everything with a fresh hierarchical structure. Existing files will be kept but the root MEMORY.md will be rebuilt."
+             },
+             {
+               "label": "Append",
+               "description": "Preserve existing files and create a hierarchical layer structure alongside them. Existing files will be analyzed and reorganized into appropriate layers."
+             },
+             {
+               "label": "Cancel",
+               "description": "Stop and do nothing. The current memory files remain unchanged."
+             }
+           ]
+         }
+       ]
+     }
+     \`\`\`
+
+  3. Wait for the user's selection.
+  4. Based on the answer:
+     - "Overwrite" → proceed with OVERWRITE mode (skip to Step 2, proceed as normal)
+     - "Append" → proceed with APPEND mode (continue to Step 1-A below)
+     - "Cancel" → STOP and report: "Initialization cancelled. Existing memory files remain unchanged."
+     - "Other" (custom text) → STOP and report: "Custom action not supported. Please choose Overwrite, Append, or Cancel."
 
 ## Mode Selection
 
-After Step 1, if the memory directory already contains .md files, the user must choose a mode:
-- **OVERWRITE**: Delete everything and rebuild from scratch (existing behavior)
-- **APPEND**: Preserve existing files, build hierarchy alongside them, and reorganize as needed
-- **CANCEL**: Stop and report what exists
+The mode is determined by the user's response to the AskUserQuestionTool in Step 1:
+- **OVERWRITE**: Triggered when the user selects "Overwrite". The agent proceeds with standard steps (Step 2 onwards), rebuilding the hierarchy from scratch. Existing files are kept but the root MEMORY.md is rebuilt.
+- **APPEND**: Triggered when the user selects "Append". The agent preserves existing files, builds the hierarchy alongside them, and reorganizes as needed. Follow the extended steps in Step 1-A below, then continue with standard steps.
+- **CANCEL**: Triggered when the user selects "Cancel" or "Other". The agent stops and reports the current state without making changes.
 
-If the user chose **APPEND**, follow the extended steps below. If OVERWRITE or empty directory, proceed with the standard steps.
+If OVERWRITE was chosen or the directory was empty, proceed directly to Step 2. If APPEND was chosen, follow Step 1-A first, then continue with Step 2.
 
 ### Append Mode Overview
 
@@ -375,14 +405,14 @@ If running in Append mode, use this format:
 
 ## Tool Constraints
 
-You have access to: Read, Glob, Grep, Bash, Edit, Write.
-- Use Glob for scanning, Read for config files, Write for creating LAYER.md and MEMORY.md, Bash for mkdir.
-- Do NOT modify any files outside the memory directory.
-- Do NOT read source code files (only config files and README/CLAUDE.md).
-- If the memory directory already has content:
-  - If the user chose OVERWRITE: proceed with overwrite logic (existing behavior)
-  - If the user chose APPEND: proceed with append logic (new behavior below)
-  - If the user chose CANCEL: STOP and report what exists
+You have access to: Read, Glob, Grep, Bash, Edit, Write, AskUserQuestion.
+- Use Glob for scanning, Read for config files and existing memories
+- Use AskUserQuestionTool for interactive user choices
+- Use Write for creating LAYER.md and MEMORY.md
+- Use Bash for mkdir
+- Use Edit for reorganizing existing files in Append mode
+- Do NOT modify any files outside the memory directory
+- Do NOT read source code files (only config files and README/CLAUDE.md)
 `
 
 export function registerInitMemorySkill(): void {
@@ -397,6 +427,7 @@ export function registerInitMemorySkill(): void {
     'Bash',
     'Edit',
     'Write',
+    'AskUserQuestion',
   ]
 
   registerBundledSkill({
