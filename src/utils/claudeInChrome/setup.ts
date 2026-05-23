@@ -299,7 +299,7 @@ function registerWindowsNativeHosts(manifestPath: string): void {
 }
 
 /**
- * Create a wrapper script in ~/.doge/chrome/ that invokes the given command. This is
+ * Create a wrapper script in ~/.dl/chrome/ that invokes the given command. This is
  * necessary because Chrome's native host manifest "path" field cannot contain arguments.
  *
  * @param command - The full command to execute (e.g., "/path/to/claude --chrome-native-host")

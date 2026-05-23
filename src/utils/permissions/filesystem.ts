@@ -92,11 +92,11 @@ export function normalizeCaseForComparison(path: string): string {
 }
 
 /**
- * If filePath is inside a skills directory (project: .claude/skills/{name}/, user: ~/.doge/skills/{name}/),
+ * If filePath is inside a skills directory (project: .claude/skills/{name}/, user: ~/.dl/skills/{name}/),
  * return the skill name and a session-allow pattern scoped to just that skill.
  * Used to offer a narrower "allow edits to this skill only" option in the
  * permission dialog and SDK suggestions, so iterating on one skill doesn't
- * require granting session access to all of .doge/ (settings.json, hooks/, etc.).
+ * require granting session access to all of .dl/ (settings.json, hooks/, etc.).
  */
 export function getClaudeSkillScope(
   filePath: string,
@@ -111,7 +111,7 @@ export function getClaudeSkillScope(
     },
     {
       dir: expandPath(join(getClaudeConfigHomeDir(), 'skills')),
-      prefix: '~/.doge/skills/',
+      prefix: '~/.dl/skills/',
     },
   ]
 
@@ -199,11 +199,11 @@ function getSettingsPaths(): string[] {
 
 export function isClaudeSettingsPath(filePath: string): boolean {
   // SECURITY: Normalize path structure first to prevent bypass via redundant ./
-  // sequences like `./.doge/./settings.json` which would evade the endsWith() check
+  // sequences like `./.dl/./settings.json` which would evade the endsWith() check
   const expandedPath = expandPath(filePath)
 
   // Normalize for case-insensitive comparison to prevent bypassing security
-  // with paths like .doge/Settings.locaL.json
+  // with paths like .dl/Settings.locaL.json
   const normalizedPath = normalizeCaseForComparison(expandedPath)
 
   // Use platform separator so endsWith checks work on both Unix (/) and Windows (\)
@@ -279,7 +279,7 @@ function isSessionMemoryPath(absolutePath: string): boolean {
 
 /**
  * Check if file is within the current project's directory.
- * Path format: ~/.doge/projects/{sanitized-cwd}/...
+ * Path format: ~/.dl/projects/{sanitized-cwd}/...
  */
 function isProjectDirPath(absolutePath: string): boolean {
   const projectDir = getProjectDir(getCwd())
@@ -1272,12 +1272,12 @@ export function checkWritePermissionForTool<Input extends AnyObject>(
   )
   if (claudeFolderAllowRule) {
     // Check if this rule is scoped under .claude/ (project or global).
-    // Accepts both the broad patterns ('/.claude/**', '~/.doge/**') and
+    // Accepts both the broad patterns ('/.claude/**', '~/.dl/**') and
     // narrowed ones like '/.claude/skills/my-skill/**' so users can grant
     // session access to a single skill without also exposing settings.json
     // or hooks/. The rule already matched the path via matchingRuleForInput;
     // this is an additional scope check. Reject '..' to prevent a rule like
-    // '/.doge/../**' from leaking this bypass outside .doge/.
+    // '/.dl/../**' from leaking this bypass outside .dl/.
     const ruleContent = claudeFolderAllowRule.ruleValue.ruleContent
     if (
       ruleContent &&
@@ -1304,9 +1304,9 @@ export function checkWritePermissionForTool<Input extends AnyObject>(
   // permission to edit protected files
   const safetyCheck = checkPathSafetyForAutoEdit(path, pathsToCheck)
   if (!safetyCheck.safe) {
-    // SDK suggestion: if under .claude/skills/{name}/ or ~/.doge/skills/{name}/, emit the narrowed
+    // SDK suggestion: if under .claude/skills/{name}/ or ~/.dl/skills/{name}/, emit the narrowed
     // session-scoped addRules that step 1.6 will honor on the next call.
-    // Everything else (.claude/settings.json, ~/.doge/settings.json, .git/, .vscode/, .idea/) falls
+    // Everything else (.claude/settings.json, ~/.dl/settings.json, .git/, .vscode/, .idea/) falls
     // back to generateSuggestions — its setMode suggestion doesn't bypass
     // this check, but preserving it avoids a surprising empty array.
     const skillScope = getClaudeSkillScope(path)
@@ -1511,7 +1511,7 @@ export function checkEditableInternalPath(
   // Template job's own directory. Env key hardcoded (vs importing JOB_ENV_KEY
   // from jobs/state) so tree-shaking eliminates the string from external
   // builds — spawn.test.ts asserts the string matches. Hijack guard: the env
-  // var value must itself resolve under ~/.doge/jobs/. Symlink guard: every
+  // var value must itself resolve under ~/.dl/jobs/. Symlink guard: every
   // resolved form of the target (lexical + symlink chain) must fall under some
   // resolved form of the job dir, so a symlink inside the job dir pointing at
   // e.g. ~/.ssh/authorized_keys does not get a free write. Resolving both
@@ -1564,7 +1564,7 @@ export function checkEditableInternalPath(
 
   // Memdir directory (persistent memory for cross-session learning)
   // This pre-safety-check carve-out exists because the default path is under
-  // ~/.doge/, which is in DANGEROUS_DIRECTORIES. The CLAUDE_COWORK_MEMORY_PATH_OVERRIDE
+  // ~/.dl/, which is in DANGEROUS_DIRECTORIES. The CLAUDE_COWORK_MEMORY_PATH_OVERRIDE
   // override is an arbitrary caller-designated directory with no such conflict,
   // so it gets NO special permission treatment here — writes go through normal
   // permission flow (step 5 → ask). SDK callers who want silent memory should
@@ -1586,7 +1586,7 @@ export function checkEditableInternalPath(
   // .claude/ DANGEROUS_DIRECTORIES check prompts for it, which in SDK mode
   // cascades: user clicks "Always allow" → setMode:acceptEdits suggestion
   // applied → silent downgrade from auto mode. Matches the project-level
-  // .doge/ only (not ~/.doge/) since launch.json is per-project.
+  // .dl/ only (not ~/.dl/) since launch.json is per-project.
   if (
     normalizeCaseForComparison(normalizedPath) ===
     normalizeCaseForComparison(join(getOriginalCwd(), '.claude', 'launch.json'))
@@ -1629,7 +1629,7 @@ export function checkReadableInternalPath(
   }
 
   // Project directory (for reading past session memories)
-  // Path format: ~/.doge/projects/{sanitized-cwd}/...
+  // Path format: ~/.dl/projects/{sanitized-cwd}/...
   if (isProjectDirPath(normalizedPath)) {
     return {
       behavior: 'allow',
@@ -1724,7 +1724,7 @@ export function checkReadableInternalPath(
     }
   }
 
-  // Tasks directory (~/.doge/tasks/) for swarm task coordination
+  // Tasks directory (~/.dl/tasks/) for swarm task coordination
   const tasksDir = join(getClaudeConfigHomeDir(), 'tasks') + sep
   if (
     normalizedPath === tasksDir.slice(0, -1) ||
@@ -1740,7 +1740,7 @@ export function checkReadableInternalPath(
     }
   }
 
-  // Teams directory (~/.doge/teams/) for swarm coordination
+  // Teams directory (~/.dl/teams/) for swarm coordination
   const teamsReadDir = join(getClaudeConfigHomeDir(), 'teams') + sep
   if (
     normalizedPath === teamsReadDir.slice(0, -1) ||

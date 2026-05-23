@@ -30,7 +30,7 @@ export async function call(
 
   if (arg === 'on' || (arg === 'toggle' && !isCurrentlyCoordinator) || (!arg && !isCurrentlyCoordinator)) {
     setCoordinatorMode(true)
-    onDone('⚔ Commander mode ON — I will dispatch agents from ~/.doge/agents to execute tasks and verify their results')
+    onDone('⚔ Commander mode ON — I will dispatch agents from ~/.dl/agents to execute tasks and verify their results')
   } else if (arg === 'off' || (arg === 'toggle' && isCurrentlyCoordinator) || (!arg && isCurrentlyCoordinator)) {
     setCoordinatorMode(false)
     onDone('Commander mode OFF')

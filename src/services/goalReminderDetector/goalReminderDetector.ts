@@ -12,7 +12,7 @@ const REFLECTION_MESSAGES = [
   // Message 1: Decision to create findings.md
   `You've been working on this task for a while. Consider:
 
-1. **Complexity check:** Is this task complex enough to warrant persistent notes? If yes, create \`findings.md\` (e.g., in the project root or at \`~/.doge/projects/<slug>/findings.md\`).
+1. **Complexity check:** Is this task complex enough to warrant persistent notes? If yes, create \`findings.md\` (e.g., in the project root or at \`~/.dl/projects/<slug>/findings.md\`).
 
 2. **If findings.md exists:** Read it first. Have you already discovered something relevant? Use it to avoid redundant exploration.
 
@@ -25,7 +25,7 @@ Creating \`findings.md\` is like creating a CLAUDE.md for this specific question
   // Message 2: Findings maintenance check
   `Before continuing, check your external memory:
 
-1. **Does findings.md exist?** If this task is complex or multi-step, consider creating one at \`~/.doge/projects/<slug>/findings.md\`.
+1. **Does findings.md exist?** If this task is complex or multi-step, consider creating one at \`~/.dl/projects/<slug>/findings.md\`.
 
 2. **Read existing findings:** If it exists, start by reading it. Key findings prevent rediscovering the wheel.
 
@@ -42,11 +42,11 @@ Once you create \`findings.md\`, treat it as a commitment — check and update i
   // Message 3: Documentation and memory reference
   `Consider your exploration strategy:
 
-1. **Project memory:** Check \`~/.doge/projects/<slug>/memory/\` — relevant context may already exist.
+1. **Project memory:** Check \`~/.dl/projects/<slug>/memory/\` — relevant context may already exist.
 
 2. **Question-level memory:** Is this a complex question that would benefit from a \`findings.md\`? If yes, create one now:
    \`\`\`
-   Location: ~/.doge/projects/<slug>/findings.md
+   Location: ~/.dl/projects/<slug>/findings.md
    Format: Free-form markdown, timestamped entries
    Content: Key discoveries, file paths, bug locations, patterns
    \`\`\`
@@ -63,7 +63,7 @@ Like CLAUDE.md, once \`findings.md\` exists, the model will be reminded to check
 1. **Original goal:** What specifically were you asked to do?
 2. **Current focus:** What are you working on right now?
 3. **Findings check:**
-   - Does \`~/.doge/projects/<slug>/findings.md\` exist? If not, should you create one?
+   - Does \`~/.dl/projects/<slug>/findings.md\` exist? If not, should you create one?
    - Read existing findings if they exist
    - Add any new discoveries: file locations, bug causes, patterns, decisions
 
@@ -87,7 +87,7 @@ Create findings.md once = benefit forever. Check it every reminder.`,
 3. **Edge cases:** Have you considered boundary conditions?
 4. **User requirements:** Did you address everything?
 
-The \`findings.md\` at \`~/.doge/projects/<slug>/findings.md\` is your question-level CLAUDE.md. Create it for complex tasks, maintain it throughout, check it regularly.`,
+The \`findings.md\` at \`~/.dl/projects/<slug>/findings.md\` is your question-level CLAUDE.md. Create it for complex tasks, maintain it throughout, check it regularly.`,
 
   // Message 6: Problem-solving checkpoint
   `Mid-exploration checkpoint:
@@ -99,10 +99,10 @@ The \`findings.md\` at \`~/.doge/projects/<slug>/findings.md\` is your question-
    - There are important file paths or patterns to remember
    - You expect to need this context later
 
-   If yes: \`~/.doge/projects/<slug>/findings.md\`
+   If yes: \`~/.dl/projects/<slug>/findings.md\`
 
 2. **If findings.md exists:**
-   \`cat ~/.doge/projects/<slug>/findings.md\` — review your discoveries first
+   \`cat ~/.dl/projects/<slug>/findings.md\` — review your discoveries first
 
 3. **Record new findings:** Write significant discoveries immediately with timestamps:
    \`\`\`markdown

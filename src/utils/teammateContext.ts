@@ -24,6 +24,8 @@ export type TeammateContext = {
   agentId: string
   /** Display name, e.g., "researcher" */
   agentName: string
+  /** Optional human-readable display name for UI (falls back to agentName) */
+  displayName?: string
   /** Team name this teammate belongs to */
   teamName: string
   /** UI color assigned to this teammate */
@@ -83,6 +85,7 @@ export function isInProcessTeammate(): boolean {
 export function createTeammateContext(config: {
   agentId: string
   agentName: string
+  displayName?: string
   teamName: string
   color?: string
   planModeRequired: boolean

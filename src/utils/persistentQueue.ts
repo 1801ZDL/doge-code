@@ -4,8 +4,8 @@ import { join } from 'path'
 import { createSignal } from './signal.js'
 
 const HOME_DIR = process.env.HOME ?? homedir()
-const DOGE_DIR = join(HOME_DIR, '.doge')
-const QUEUE_FILE = join(DOGE_DIR, 'queue.json')
+const DL_DIR = join(HOME_DIR, '.dl')
+const QUEUE_FILE = join(DL_DIR, 'queue.json')
 
 interface QueueData {
   tasks: string[]
@@ -32,8 +32,8 @@ function loadQueue(): string[] {
 
 function saveQueue(tasks: string[]): void {
   try {
-    if (!existsSync(DOGE_DIR)) {
-      mkdirSync(DOGE_DIR, { recursive: true })
+    if (!existsSync(DL_DIR)) {
+      mkdirSync(DL_DIR, { recursive: true })
     }
     const data: QueueData = {
       tasks,

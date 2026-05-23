@@ -45,6 +45,7 @@ import { enterTeammateView, exitTeammateView, stopOrDismissAgent } from '../../s
 import type { ToolPermissionContext } from '../../Tool.js';
 import { getRunningTeammatesSorted } from '../../tasks/InProcessTeammateTask/InProcessTeammateTask.js';
 import type { InProcessTeammateTaskState } from '../../tasks/InProcessTeammateTask/types.js';
+import { getTeammateDisplayName } from '../../tasks/InProcessTeammateTask/types.js';
 import { isPanelAgentTask, type LocalAgentTaskState } from '../../tasks/LocalAgentTask/LocalAgentTask.js';
 import { isBackgroundTask } from '../../tasks/types.js';
 import { AGENT_COLOR_TO_THEME_COLOR, AGENT_COLORS, type AgentColorName } from '../../tools/AgentTool/agentColorManager.js';
@@ -324,8 +325,8 @@ function PromptInput({
   const thinkingEnabled = useAppState(s => s.thinkingEnabled);
   const isFastMode = useAppState(s => isFastModeEnabled() ? s.fastMode : false);
   const effortValue = useAppState(s => s.effortValue);
-  const viewedTeammate = getViewedTeammateTask(store.getState());
-  const viewingAgentName = viewedTeammate?.identity.agentName;
+  const viewedTeammate = useAppState(s => getViewedTeammateTask(s));
+  const viewingAgentName = viewedTeammate ? getTeammateDisplayName(viewedTeammate.identity) : undefined;
   // identity.color is typed as `string | undefined` (not AgentColorName) because
   // teammate identity comes from file-based config. Validate before casting to
   // ensure we only use valid color names (falls back to cyan if invalid).

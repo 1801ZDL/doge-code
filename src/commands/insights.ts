@@ -87,7 +87,7 @@ const getRemoteHostSessionCount: (hs: string) => Promise<number> =
           'ssh',
           [
             `${homespace}.coder`,
-            'find /root/.doge/projects -name "*.jsonl" 2>/dev/null | wc -l',
+            'find /root/.dl/projects -name "*.jsonl" 2>/dev/null | wc -l',
           ],
           { timeout: 30000 },
         )
@@ -111,7 +111,7 @@ const collectFromRemoteHost: (
           // SCP the projects folder
           const scpResult = await execFileNoThrow(
             'scp',
-            ['-rq', `${homespace}.coder:/root/.doge/projects/`, tempDir],
+            ['-rq', `${homespace}.coder:/root/.dl/projects/`, tempDir],
             { timeout: 300000 },
           )
           if (scpResult.code !== 0) {

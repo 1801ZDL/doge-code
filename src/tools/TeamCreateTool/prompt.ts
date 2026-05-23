@@ -31,8 +31,8 @@ Create a new team to coordinate multiple agents working on a project. Teams have
 \`\`\`
 
 This creates:
-- A team file at \`~/.doge/teams/{team-name}/config.json\`
-- A corresponding task list directory at \`~/.doge/tasks/{team-name}/\`
+- A team file at \`~/.dl/teams/{team-name}/config.json\`
+- A corresponding task list directory at \`~/.dl/tasks/{team-name}/\`
 
 ## Team Workflow
 
@@ -74,7 +74,7 @@ Teammates go idle after every turn—this is completely normal and expected. A t
 ## Discovering Team Members
 
 Teammates can read the team config file to discover other team members:
-- **Team config location**: \`~/.doge/teams/{team-name}/config.json\`
+- **Team config location**: \`~/.dl/teams/{team-name}/config.json\`
 
 The config file contains a \`members\` array with each teammate's:
 - \`name\`: Human-readable name (**always use this** for messaging and task assignment)
@@ -87,12 +87,12 @@ The config file contains a \`members\` array with each teammate's:
 
 Example of reading team config:
 \`\`\`
-Use the Read tool to read ~/.doge/teams/{team-name}/config.json
+Use the Read tool to read ~/.dl/teams/{team-name}/config.json
 \`\`\`
 
 ## Task List Coordination
 
-Teams share a task list that all teammates can access at \`~/.doge/tasks/{team-name}/\`.
+Teams share a task list that all teammates can access at \`~/.dl/tasks/{team-name}/\`.
 
 Teammates should:
 1. Check TaskList periodically, **especially after completing each task**, to find available work or see newly unblocked tasks

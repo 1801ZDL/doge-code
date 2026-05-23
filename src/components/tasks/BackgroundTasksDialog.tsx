@@ -10,6 +10,7 @@ import type { ToolUseContext } from 'src/Tool.js';
 import { DreamTask, type DreamTaskState } from 'src/tasks/DreamTask/DreamTask.js';
 import { InProcessTeammateTask } from 'src/tasks/InProcessTeammateTask/InProcessTeammateTask.js';
 import type { InProcessTeammateTaskState } from 'src/tasks/InProcessTeammateTask/types.js';
+import { getTeammateDisplayName } from 'src/tasks/InProcessTeammateTask/types.js';
 import type { LocalAgentTaskState } from 'src/tasks/LocalAgentTask/LocalAgentTask.js';
 import { LocalAgentTask } from 'src/tasks/LocalAgentTask/LocalAgentTask.js';
 import type { LocalShellTaskState } from 'src/tasks/LocalShellTask/guards.js';
@@ -548,7 +549,7 @@ function toListItem(task: BackgroundTaskState): ListItem {
       return {
         id: task.id,
         type: 'in_process_teammate',
-        label: `@${task.identity.agentName}`,
+        label: `@${getTeammateDisplayName(task.identity)}`,
         status: task.status,
         task
       };

@@ -59,9 +59,9 @@ export type SettingsSyncUploadResult = {
  * Keys used for sync entries
  */
 export const SYNC_KEYS = {
-  USER_SETTINGS: '~/.doge/settings.json',
-  USER_MEMORY: '~/.doge/CLAUDE.md',
+  USER_SETTINGS: '~/.dl/settings.json',
+  USER_MEMORY: '~/.dl/CLAUDE.md',
   projectSettings: (projectId: string) =>
-    `projects/${projectId}/.doge/settings.local.json`,
+    `projects/${projectId}/.dl/settings.local.json`,
   projectMemory: (projectId: string) => `projects/${projectId}/CLAUDE.local.md`,
 } as const

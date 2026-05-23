@@ -5,6 +5,7 @@ import * as React from 'react';
 import { TEAMMATE_MESSAGE_TAG } from '../../constants/xml.js';
 import { Ansi, Box, Text, type TextProps } from '../../ink.js';
 import { toInkColor } from '../../utils/ink.js';
+import { useAppState } from '../../state/AppState.js';
 import { jsonParse } from '../../utils/slowOperations.js';
 import { isShutdownApproved } from '../../utils/teammateMailbox.js';
 import { MessageResponse } from '../MessageResponse.js';
@@ -46,11 +47,11 @@ function parseTeammateMessages(text: string): ParsedMessage[] {
   }
   return messages;
 }
-function getDisplayName(teammateId: string): string {
+function getDisplayName(teammateId: string, displayNameMap: Map<string, string>): string {
   if (teammateId === 'leader') {
     return 'leader';
   }
-  return teammateId;
+  return displayNameMap.get(teammateId) || teammateId;
 }
 export function UserTeammateMessage({
   addMargin,
@@ -59,6 +60,18 @@ export function UserTeammateMessage({
   },
   isTranscriptMode
 }: Props): React.ReactNode {
+  // Look up display names for in-process teammates from AppState
+  const tasks = useAppState(s => s.tasks)
+  const displayNameMap = React.useMemo(() => {
+    const map = new Map<string, string>()
+    for (const task of Object.values(tasks)) {
+      if (task?.type === 'in_process_teammate' && task.identity.displayName) {
+        map.set(task.identity.agentName, task.identity.displayName)
+      }
+    }
+    return map
+  }, [tasks])
+
   const messages = parseTeammateMessages(text).filter(msg => {
     // Pre-filter shutdown lifecycle messages to avoid empty wrapper
     // Box elements creating blank lines between model turns
@@ -79,7 +92,7 @@ export function UserTeammateMessage({
   return <Box flexDirection="column" marginTop={addMargin ? 1 : 0} width="100%">
       {messages.map((msg_0, index) => {
       const inkColor = toInkColor(msg_0.color);
-      const displayName = getDisplayName(msg_0.teammateId);
+      const displayName = getDisplayName(msg_0.teammateId, displayNameMap);
 
       // Try to render as plan approval message (request or response)
       const planApprovalElement = tryRenderPlanApprovalMessage(msg_0.content, displayName);

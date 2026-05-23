@@ -1,9 +1,7 @@
 import * as React from 'react'
-import { useAppState, useAppStateStore } from '../../state/AppState.js'
-import {
-  getActiveAgentForInput,
-  getViewedTeammateTask,
-} from '../../state/selectors.js'
+import { useAppState } from '../../state/AppState.js'
+import { getViewedTeammateTask } from '../../state/selectors.js'
+import { getTeammateDisplayName } from '../../tasks/InProcessTeammateTask/types.js'
 import {
   AGENT_COLOR_TO_THEME_COLOR,
   AGENT_COLORS,
@@ -45,17 +43,20 @@ export function useSwarmBanner(): SwarmBannerInfo {
   const teamContext = useAppState(s => s.teamContext)
   const standaloneAgentContext = useAppState(s => s.standaloneAgentContext)
   const agent = useAppState(s => s.agent)
-  // Subscribe so the banner updates on enter/exit teammate view even though
-  // getActiveAgentForInput reads it from store.getState().
-  useAppState(s => s.viewingAgentTaskId)
-  const store = useAppStateStore()
   const [insideTmux, setInsideTmux] = React.useState<boolean | null>(null)
 
   React.useEffect(() => {
     void isInsideTmux().then(setInsideTmux)
   }, [])
 
-  const state = store.getState()
+  // Use useAppState for all state reads to avoid React tearing when
+  // mixing imperative store.getState() with reactive useSyncExternalStore.
+  const viewedTeammate = useAppState(s => getViewedTeammateTask(s))
+  const viewingAgentTaskId = useAppState(s => s.viewingAgentTaskId)
+  const agentNameRegistry = useAppState(s => s.agentNameRegistry)
+  const standaloneName = useAppState(s => getStandaloneAgentName(s))
+  const agentDefinitions = useAppState(s => s.agentDefinitions)
+  const tasks = useAppState(s => s.tasks)
 
   // Teammate process: show @agentName with assigned color.
   // In-process teammates run headless — their banner shows in the leader UI instead.
@@ -78,7 +79,6 @@ export function useSwarmBanner(): SwarmBannerInfo {
     teamContext.teammates &&
     Object.keys(teamContext.teammates).length > 0
   if (hasTeammates) {
-    const viewedTeammate = getViewedTeammateTask(state)
     const viewedColor = toThemeColor(viewedTeammate?.identity.color)
     const inProcessMode = isInProcessEnabled()
     const nativePanes = getCachedDetectionResult()?.isNative ?? false
@@ -94,7 +94,7 @@ export function useSwarmBanner(): SwarmBannerInfo {
       viewedTeammate
     ) {
       return {
-        text: `@${viewedTeammate.identity.agentName}`,
+        text: `@${getTeammateDisplayName(viewedTeammate.identity)}`,
         bgColor: viewedColor,
       }
     }
@@ -105,24 +105,24 @@ export function useSwarmBanner(): SwarmBannerInfo {
   // Viewing a background agent (CoordinatorTaskPanel): local_agent tasks aren't
   // InProcessTeammates, so getViewedTeammateTask misses them. Reverse-lookup the
   // name from agentNameRegistry the same way CoordinatorAgentStatus does.
-  const active = getActiveAgentForInput(state)
-  if (active.type === 'named_agent') {
-    const task = active.task
-    let name: string | undefined
-    for (const [n, id] of state.agentNameRegistry) {
-      if (id === task.id) {
-        name = n
-        break
+  if (!viewedTeammate && viewingAgentTaskId) {
+    const task = tasks[viewingAgentTaskId]
+    if (task?.type === 'local_agent') {
+      let name: string | undefined
+      for (const [n, id] of agentNameRegistry) {
+        if (id === task.id) {
+          name = n
+          break
+        }
       }
-    }
-    return {
-      text: name ? `@${name}` : task.description,
-      bgColor: getAgentColor(task.agentType) ?? 'cyan_FOR_SUBAGENTS_ONLY',
+      return {
+        text: name ? `@${name}` : task.description,
+        bgColor: getAgentColor(task.agentType) ?? 'cyan_FOR_SUBAGENTS_ONLY',
+      }
     }
   }
 
   // Standalone agent (/rename, /color): name and/or custom color, no @team.
-  const standaloneName = getStandaloneAgentName(state)
   const standaloneColor = standaloneAgentContext?.color
   if (standaloneName || standaloneColor) {
     return {
@@ -133,7 +133,7 @@ export function useSwarmBanner(): SwarmBannerInfo {
 
   // --agent CLI flag (when not handled above).
   if (agent) {
-    const agentDef = state.agentDefinitions.activeAgents.find(
+    const agentDef = agentDefinitions.activeAgents.find(
       a => a.agentType === agent,
     )
     return {

@@ -13,6 +13,8 @@ import type { AgentProgress } from '../LocalAgentTask/LocalAgentTask.js'
 export type TeammateIdentity = {
   agentId: string // e.g., "researcher@my-team"
   agentName: string // e.g., "researcher"
+  /** Optional human-readable display name for UI (falls back to agentName) */
+  displayName?: string
   teamName: string
   color?: string
   planModeRequired: boolean
@@ -73,6 +75,15 @@ export type InProcessTeammateTaskState = TaskStateBase & {
   // Progress tracking (for computing deltas in notifications)
   lastReportedToolCount: number
   lastReportedTokenCount: number
+}
+
+/**
+ * Get the display name for a teammate, preferring displayName over agentName.
+ */
+export function getTeammateDisplayName(
+  identity: TeammateIdentity,
+): string {
+  return identity.displayName || identity.agentName
 }
 
 export function isInProcessTeammateTask(

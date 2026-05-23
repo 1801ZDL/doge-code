@@ -3,7 +3,7 @@
  *
  * Three-layer model (see reconciler.ts for Layer-2):
  * - Layer 1: intent (settings)
- * - Layer 2: materialization (~/.doge/plugins/) — reconcileMarketplaces()
+ * - Layer 2: materialization (~/.dl/plugins/) — reconcileMarketplaces()
  * - Layer 3: active components (AppState) — this file
  *
  * Called from:

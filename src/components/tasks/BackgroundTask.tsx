@@ -5,6 +5,7 @@ import type { BackgroundTaskState } from 'src/tasks/types.js';
 import type { DeepImmutable } from 'src/types/utils.js';
 import { truncate } from 'src/utils/format.js';
 import { toInkColor } from 'src/utils/ink.js';
+import { getTeammateDisplayName } from 'src/tasks/InProcessTeammateTask/types.js';
 import { plural } from 'src/utils/stringUtils.js';
 import { DIAMOND_FILLED, DIAMOND_OPEN } from '../../constants/figures.js';
 import { RemoteSessionProgress } from './RemoteSessionProgress.js';
@@ -165,10 +166,11 @@ export function BackgroundTask(t0) {
           } else {
             t5 = $[41];
           }
-          if ($[42] !== t5 || $[43] !== task.identity.agentName) {
-            t4 = <Text color={t5}>@{task.identity.agentName}</Text>;
+          const displayName = getTeammateDisplayName(task.identity);
+          if ($[42] !== t5 || $[43] !== displayName) {
+            t4 = <Text color={t5}>@{displayName}</Text>;
             $[42] = t5;
-            $[43] = task.identity.agentName;
+            $[43] = displayName;
             $[44] = t4;
           } else {
             t4 = $[44];

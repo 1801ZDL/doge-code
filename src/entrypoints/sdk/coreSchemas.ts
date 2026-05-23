@@ -1163,7 +1163,7 @@ export const AgentDefinitionSchema = lazySchema(() =>
         .enum(['user', 'project', 'local'])
         .optional()
         .describe(
-          "Scope for auto-loading agent memory files. 'user' - ~/.doge/agent-memory/<agentType>/, 'project' - .doge/agent-memory/<agentType>/, 'local' - .doge/agent-memory-local/<agentType>/",
+          "Scope for auto-loading agent memory files. 'user' - ~/.dl/agent-memory/<agentType>/, 'project' - .dl/agent-memory/<agentType>/, 'local' - .dl/agent-memory-local/<agentType>/",
         ),
       effort: z
         .union([z.enum(['low', 'medium', 'high', 'max']), z.number().int()])
@@ -1191,7 +1191,7 @@ export const SettingSourceSchema = lazySchema(() =>
     .enum(['user', 'project', 'local'])
     .describe(
       'Source for loading filesystem-based settings. ' +
-        "'user' - Global user settings (~/.doge/settings.json). " +
+        "'user' - Global user settings (~/.dl/settings.json). " +
         "'project' - Project settings (.claude/settings.json). " +
         "'local' - Local settings (.claude/settings.local.json).",
     ),

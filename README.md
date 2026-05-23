@@ -37,7 +37,7 @@
 - 正在加入 OpenAI Chat Completions <-> Anthropic Messages 转接能力
 - 支持自定义 API Key
 - 支持自定义模型与模型列表管理
-- 尽量把自定义接入数据收口到 [`~/.doge`](README.md) 路径体系
+- 尽量把自定义接入数据收口到 [`~/.dl`](README.md) 路径体系
 - 在保留 CLI/TUI 主体结构的前提下，降低对官方登录流的绑定
 
 换句话说，它现在更像一个”可自托管 / 可代理 / 可转接”的 [`Claude Code`](README.md) 变体。
@@ -84,7 +84,7 @@
 | `initMemory.ts` | `/init-memory` skill，支持交互式选择 + Append 整理 |
 | `memoryTypes.ts` | 扩展 frontmatter：layer, scope, complexity, related 等字段 |
 
-记忆默认存储路径：`~/.doge/projects/<project-name>/memory/`
+记忆默认存储路径：`~/.dl/projects/<project-name>/memory/`
 
 ## 与原版 Claude Code 的数据隔离
 
@@ -92,8 +92,8 @@
 
 当前 Fork 已明确把默认用户目录收口到：
 
-- 配置目录：[`~/.doge`](README.md)
-- 全局配置文件：[`~/.doge/.claude.json`](README.md)
+- 配置目录：[`~/.dl`](README.md)
+- 全局配置文件：[`~/.dl/.claude.json`](README.md)
 
 这样做的目的，是避免以下问题：
 
@@ -393,7 +393,7 @@ bun run version
 
 ### 2026-04-15 — 目录重构与 Coordinator 模式启动
 
-- **refactor**: 项目级配置目录统一为 `.claude/`，用户级保留 `.doge/`
+- **refactor**: 项目级配置目录统一为 `.claude/`，用户级保留 `.dl/`
 - **feat**: 新增 `/coordinator` 命令开启 coordinator 多智能体模式
 - **fix**: 移除 feature gate，默认可用 coordinator 模式
 
@@ -419,7 +419,7 @@ bun run version
 - **fix**: WebSearch 修复（需重新 `bun install`）
 - **fix**: Linux 下 `bun link` 后启动脚本被 shell 误识别问题
 - **fix**: `Unable to connect to Anthropic services` 连接问题
-- **refactor**: 所有 `.claude/` 目录重命名为 `.doge/`
+- **refactor**: 所有 `.claude/` 目录重命名为 `.dl/`
 - **refactor**: 进一步切断外发遥测主链
 
 ### 2026-04-01 ~ 04-02 — 项目初始化与 OpenAI 兼容

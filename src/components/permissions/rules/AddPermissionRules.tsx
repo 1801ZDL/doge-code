@@ -32,7 +32,7 @@ export function optionForPermissionSaveDestination(saveDestination: EditableSett
     case 'userSettings':
       return {
         label: 'User settings',
-        description: `Saved in at ~/.doge/settings.json`,
+        description: `Saved in at ~/.dl/settings.json`,
         value: saveDestination
       };
   }

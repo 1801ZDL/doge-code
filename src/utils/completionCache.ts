@@ -134,7 +134,7 @@ export async function setupShellCompletion(theme: ThemeName): Promise<string> {
 }
 
 /**
- * Regenerate cached shell completion scripts in ~/.doge/.
+ * Regenerate cached shell completion scripts in ~/.dl/.
  * Called after `claude update` so completions stay in sync with the new binary.
  */
 export async function regenerateCompletionCache(): Promise<void> {

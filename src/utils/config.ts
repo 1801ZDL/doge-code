@@ -208,9 +208,9 @@ export type GlobalConfig = {
   lastOnboardingVersion?: string
   // Tracks the last version for which release notes were seen, used for managing release notes
   lastReleaseNotesSeen?: string
-  // Timestamp when changelog was last fetched (content stored in ~/.doge/cache/changelog.md)
+  // Timestamp when changelog was last fetched (content stored in ~/.dl/cache/changelog.md)
   changelogLastFetched?: number
-  // @deprecated - Migrated to ~/.doge/cache/changelog.md. Keep for migration support.
+  // @deprecated - Migrated to ~/.dl/cache/changelog.md. Keep for migration support.
   cachedChangelog?: string
   mcpServers?: Record<string, McpServerConfig>
   // claude.ai MCP connectors that have successfully connected at least once.
@@ -1262,7 +1262,7 @@ function saveConfigWithLock<A extends object>(
 
     // Create timestamped backup of existing config before writing
     // We keep multiple backups to prevent data loss if a reset/corrupted config
-    // overwrites a good backup. Backups are stored in ~/.doge/backups/ to
+    // overwrites a good backup. Backups are stored in ~/.dl/backups/ to
     // keep the home directory clean.
     try {
       const fileBase = basename(file)
@@ -1379,7 +1379,7 @@ export function enableConfigs(): void {
 
 /**
  * Returns the directory where config backup files are stored.
- * Uses ~/.doge/backups/ to keep the home directory clean.
+ * Uses ~/.dl/backups/ to keep the home directory clean.
  */
 function getConfigBackupDir(): string {
   return join(getClaudeConfigHomeDir(), 'backups')
@@ -1387,7 +1387,7 @@ function getConfigBackupDir(): string {
 
 /**
  * Find the most recent backup file for a given config file.
- * Checks ~/.doge/backups/ first, then falls back to the legacy location
+ * Checks ~/.dl/backups/ first, then falls back to the legacy location
  * (next to the config file) for backwards compatibility.
  * Returns the full path to the most recent backup, or null if none exist.
  */

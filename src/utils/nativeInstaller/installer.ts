@@ -1688,7 +1688,7 @@ export async function cleanupNpmInstallations(): Promise<{
     }
   }
 
-  // Check for local installation at ~/.doge/local
+  // Check for local installation at ~/.dl/local
   const localInstallDir = join(homedir(), '.claude', 'local')
 
   try {

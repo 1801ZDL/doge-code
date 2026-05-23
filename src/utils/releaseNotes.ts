@@ -32,7 +32,7 @@ const RAW_CHANGELOG_URL =
 
 /**
  * Get the path for the cached changelog file.
- * The changelog is stored at ~/.doge/cache/changelog.md
+ * The changelog is stored at ~/.dl/cache/changelog.md
  */
 function getChangelogCachePath(): string {
   return join(getClaudeConfigHomeDir(), 'cache', 'changelog.md')

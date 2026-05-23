@@ -18,7 +18,7 @@ Choose the appropriate file based on scope:
 
 | File | Scope | Git | Use For |
 |------|-------|-----|---------|
-| \`~/.doge/settings.json\` | Global | N/A | Personal preferences for all projects |
+| \`~/.dl/settings.json\` | Global | N/A | Personal preferences for all projects |
 | \`.claude/settings.json\` | Project | Commit | Team-wide hooks, permissions, plugins |
 | \`.claude/settings.local.json\` | Project | Gitignore | Personal overrides for this project |
 
@@ -235,7 +235,7 @@ Hooks can return JSON to control behavior:
       "matcher": "Bash",
       "hooks": [{
         "type": "command",
-        "command": "jq -r '.tool_input.command' >> ~/.doge/bash-log.txt"
+        "command": "jq -r '.tool_input.command' >> ~/.dl/bash-log.txt"
       }]
     }]
   }
@@ -434,7 +434,7 @@ User: "Set DEBUG=true"
 ## Troubleshooting Hooks
 
 If a hook isn't running:
-1. **Check the settings file** - Read ~/.doge/settings.json or .claude/settings.json
+1. **Check the settings file** - Read ~/.dl/settings.json or .claude/settings.json
 2. **Verify JSON syntax** - Invalid JSON silently fails
 3. **Check the matcher** - Does it match the tool name? (e.g., "Bash", "Write", "Edit")
 4. **Check hook type** - Is it "command", "prompt", or "agent"?

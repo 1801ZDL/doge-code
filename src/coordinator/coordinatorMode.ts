@@ -112,7 +112,9 @@ export function getCoordinatorUserContext(
       const agentList = userProjectAgents
         .map(a => `- **${a.agentType}**${a.model ? ` (model: ${a.model})` : ''}: ${a.whenToUse}`)
         .join('\n')
-      content += `\n\n**Your Agent Corps (~/.doge/agents) — USE THESE FIRST:**\n${agentList}\n\n**Agent Selection Protocol (MANDATORY):**\n1. **Match task to agent description** — For EVERY subtask, read each agent's \`whenToUse\` description and pick the one whose stated purpose most closely matches the task. Do NOT default to the same agent for all tasks.\n2. **One subtask, one best agent** — Each subtask gets exactly one agent type. If no specialized agent fits, fall back to \`worker\`.\n3. **Explicit selection reasoning** — When spawning, briefly state WHY you chose that agent (e.g., "Using long-text-reader because this is a 5KB IR dump").\n4. **No agent monopolization** — If you have 3 different subtasks and 3 different specialized agents that fit, you MUST use all 3 different agents. Repetition is a failure mode.\n5. **Common scenario mapping:**\n   - Large text / IR dump / log file analysis → agent whose whenToUse mentions "long text" or "large output"\n   - Codebase exploration / multi-file research → agent whose whenToUse mentions "codebase" or "research"\n   - Implementation / editing → agent whose whenToUse mentions "implement" or "edit", else \`worker\`\n   - Verification / testing → agent whose whenToUse mentions "verify" or "test", else \`worker\``
+      content += `\n\n**Your Agent Corps (~/.dl/agents) — USE THESE FIRST:**\n${agentList}\n\n**Agent Selection Protocol (MANDATORY):**\n1. **Match task to agent description** — For EVERY subtask, read each agent's \`whenToUse\` description and pick the one whose stated purpose most closely matches the task. Do NOT default to the same agent for all tasks.\n2. **One subtask, one best agent** — Each subtask gets exactly one agent type. If no specialized agent fits, fall back to \`worker\`.\n3. **Explicit selection reasoning** — When spawning, briefly state WHY you chose that agent (e.g., "Using long-text-reader because this is a 5KB IR dump").\n4. **No agent monopolization** — If you have 3 different subtasks and 3 different specialized agents that fit, you MUST use all 3 different agents. Repetition is a failure mode.\n5. **Common scenario mapping:**\n   - Large text / IR dump / log file analysis → agent whose whenToUse mentions "long text" or "large output"\n   - Codebase exploration / multi-file research → agent whose whenToUse mentions "codebase" or "research"\n   - Implementation / editing → agent whose whenToUse mentions "implement" or "edit", else \`worker\`\n   - Verification / testing → agent whose whenToUse mentions "verify" or "test", else \`worker\`
+
+**Agent Persistence:** The agents above are loaded from \`~/.dl/agents/\` (global, survives project moves) and \`.claude/agents/\` (project-local, tied to this directory). If you notice a specialized agent pattern recurring across sessions, tell the user to save it to \`~/.dl/agents/\` via /agents so it persists when switching projects.`
     }
   }
 
@@ -120,7 +122,7 @@ export function getCoordinatorUserContext(
     content += `\n\nScratchpad directory: ${scratchpadDir}\nAgents can read and write here without permission prompts. Use this for durable cross-agent knowledge — structure files however fits the work.`
   }
 
-  content += `\n\n**Project memory self-service:** Agents have Read/Glob/Grep tools. If the context provided by the Commander feels incomplete, proactively read memory files from \`~/.doge/projects/<slug>/memory/\`. Start with \`MEMORY.md\` (the index), then read relevant topic files.`
+  content += `\n\n**Project memory self-service:** Agents have Read/Glob/Grep tools. If the context provided by the Commander feels incomplete, proactively read memory files from \`~/.dl/projects/<slug>/memory/\`. Start with \`MEMORY.md\` (the index), then read relevant topic files.`
 
   content += `\n\n**Reader agent:** For analyzing large tool outputs (2–10KB), agents can delegate to a reader using \`subagent_type: "reader"\`. Reader agents have read-only tools and return concise summaries. For >10KB outputs, the system auto-spawns a reader.`
 
@@ -147,9 +149,9 @@ export function getCoordinatorSystemPrompt(
         .join('\n')
       specializedAgentsSection = `
 
-### Your Agent Corps (~/.doge/agents)
+### Your Agent Corps (~/.dl/agents)
 
-You have access to specialized agents created by the user in ~/.doge/agents. These are your primary execution units:
+You have access to specialized agents created by the user in ~/.dl/agents. These are your primary execution units:
 
 ${agentLines}
 
@@ -232,6 +234,17 @@ ${AGENT_TOOL_NAME}({ description: "Check test coverage", subagent_type: "worker"
 // Message 1: ${AGENT_TOOL_NAME}({ description: "Agent A", ... })
 // [wait for result]
 // Message 2: ${AGENT_TOOL_NAME}({ description: "Agent B", ... })
+\`\`\`
+
+**Naming Workers:**
+Use the \`name\` parameter to give each worker a short, descriptive identifier (kebab-case, no spaces). This makes workers easier to track in the UI and address via SendMessage.
+
+\`\`\`
+// GOOD: Descriptive names
+${AGENT_TOOL_NAME}({ name: "auth-bug-hunter", description: "Investigate auth bug", subagent_type: "worker", prompt: "..." })
+${AGENT_TOOL_NAME}({ name: "test-coverage-mapper", description: "Check test coverage", subagent_type: "worker", prompt: "..." })
+
+// BAD: No name — falls back to worker-1234567890
 \`\`\`
 
 **Rules:**
@@ -363,7 +376,7 @@ You:
 ## 3. Agents
 
 When calling ${AGENT_TOOL_NAME}, the \`subagent_type\` determines which agent you dispatch:
-- **Specialized agents from ~/.doge/agents** — Use when their \`whenToUse\` matches. These are your elite units.
+- **Specialized agents from ~/.dl/agents** — Use when their \`whenToUse\` matches. These are your elite units.
 - **\`worker\`** — General-purpose agent for tasks that don't match a specialized agent.
 - **\`reader\`** — Read-only agent for analyzing large outputs.
 
@@ -371,7 +384,7 @@ ${agentCapabilities}
 
 ### Agents can self-service project memory
 
-Agents have Read/Glob/Grep tools and are encouraged to proactively read project memory files from \`~/.doge/projects/<slug>/memory/\` when the context provided by the commander feels incomplete. Start with \`MEMORY.md\` (the index), then read relevant topic files. This saves agents from rediscovering what's already documented.
+Agents have Read/Glob/Grep tools and are encouraged to proactively read project memory files from \`~/.dl/projects/<slug>/memory/\` when the context provided by the commander feels incomplete. Start with \`MEMORY.md\` (the index), then read relevant topic files. This saves agents from rediscovering what's already documented.
 
 ### Long Output Handling
 

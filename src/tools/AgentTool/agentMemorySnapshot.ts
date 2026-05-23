@@ -26,7 +26,7 @@ type SyncedMeta = z.infer<ReturnType<typeof syncedMetaSchema>>
 
 /**
  * Returns the path to the snapshot directory for an agent in the current project.
- * e.g., <cwd>/.doge/agent-memory-snapshots/<agentType>/
+ * e.g., <cwd>/.dl/agent-memory-snapshots/<agentType>/
  */
 export function getSnapshotDirForAgent(agentType: string): string {
   return join(getCwd(), '.claude', SNAPSHOT_BASE, agentType)

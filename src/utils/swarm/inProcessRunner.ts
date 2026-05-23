@@ -68,8 +68,6 @@ import { createAbortController } from '../abortController.js'
 import { type AgentContext, runWithAgentContext } from '../agentContext.js'
 import { count } from '../array.js'
 import { logForDebugging } from '../debug.js'
-import { mkdirSync, appendFileSync } from 'fs'
-import { dirname } from 'path'
 import { cloneFileStateCache } from '../fileStateCache.js'
 import {
   SUBAGENT_REJECT_MESSAGE,
@@ -115,15 +113,6 @@ import { TEAMMATE_SYSTEM_PROMPT_ADDENDUM } from './teammatePromptAddendum.js'
 type SetAppStateFn = (updater: (prev: AppState) => AppState) => void
 
 const PERMISSION_POLL_INTERVAL_MS = 500
-
-const DEBUG_LOG_FILE = '/tmp/doge-worker-debug.log'
-function appendDebugLog(msg: string): void {
-  try {
-    const timestamp = new Date().toISOString()
-    const line = `[${timestamp}] ${msg}\n`
-    appendFileSync(DEBUG_LOG_FILE, line)
-  } catch {}
-}
 
 /**
  * Creates a canUseTool function for in-process teammates that properly resolves
@@ -1183,7 +1172,7 @@ export async function runInProcessTeammate(
       // Run agent within contexts
       await runWithTeammateContext(teammateContext, async () => {
         return runWithAgentContext(agentContext, async () => {
-          appendDebugLog(`${identity.agentId} STARTING runWithAgentContext`)
+          logForDebugging(`${identity.agentId} STARTING runWithAgentContext`)
           // Mark task as running (not idle)
           updateTaskState(
             taskId,
@@ -1198,9 +1187,9 @@ export async function runInProcessTeammate(
           // so they CAN show permission prompts (unlike true background agents).
           // Use currentWorkAbortController so Escape stops this turn only, not the teammate.
           const toolNames = toolUseContext.options.tools.map(t => t.name)
-          appendDebugLog(`[inProcessRunner] ${identity.agentId} tools count: ${toolUseContext.options.tools.length}, has SendMessage: ${toolNames.includes('SendMessage')}, first 5 tools: ${toolNames.slice(0, 5).join(',')}`)
+          logForDebugging(`[inProcessRunner] ${identity.agentId} tools count: ${toolUseContext.options.tools.length}, has SendMessage: ${toolNames.includes('SendMessage')}, first 5 tools: ${toolNames.slice(0, 5).join(',')}`)
           logForDebugging(`[inProcessRunner] ${identity.agentId} calling runAgent, tools count: ${toolUseContext.options.tools.length}, has SendMessage: ${toolNames.includes('SendMessage')}`)
-          appendDebugLog(` ${identity.agentId} BEFORE for await runAgent call`)
+          logForDebugging(` ${identity.agentId} BEFORE for await runAgent call`)
           for await (const message of runAgent({
             agentDefinition: iterationAgentDefinition,
             promptMessages,
@@ -1331,13 +1320,13 @@ export async function runInProcessTeammate(
       logForDebugging(`[inProcessRunner] ${identity.agentId} runAgent loop ended, workWasAborted=${workWasAborted}`)
 
       // Check if lifecycle aborted during agent run (kills whole teammate)
-      appendDebugLog(` ${identity.agentId} runAgent loop ended, checking abort state`)
+      logForDebugging(` ${identity.agentId} runAgent loop ended, checking abort state`)
       if (abortController.signal.aborted) {
-        appendDebugLog(` ${identity.agentId} abortController is aborted, exiting loop`)
+        logForDebugging(` ${identity.agentId} abortController is aborted, exiting loop`)
         break
       }
 
-      appendDebugLog(` ${identity.agentId} workWasAborted=${workWasAborted}, proceeding to idle`)
+      logForDebugging(` ${identity.agentId} workWasAborted=${workWasAborted}, proceeding to idle`)
       // If work was aborted (Escape), log it and add interrupt message, then continue to idle state
       if (workWasAborted) {
         logForDebugging(
@@ -1376,7 +1365,7 @@ export async function runInProcessTeammate(
       )
 
       // Add debug message to task so it appears in transcript
-      appendDebugLog(` ${identity.agentId} entering idle state, waiting for messages...`)
+      logForDebugging(` ${identity.agentId} entering idle state, waiting for messages...`)
 
       // Note: We do NOT automatically send the teammate's response to the leader.
       // Teammates should use the Teammate tool to communicate with the leader.
@@ -1384,7 +1373,7 @@ export async function runInProcessTeammate(
 
       // Only send idle notification on transition to idle (not if already idle)
       if (!wasAlreadyIdle) {
-        appendDebugLog(`${identity.agentId} sending idle notification to leader`)
+        logForDebugging(`${identity.agentId} sending idle notification to leader`)
         try {
           await sendIdleNotification(
             identity.agentName,
@@ -1395,9 +1384,9 @@ export async function runInProcessTeammate(
               summary: getLastPeerDmSummary(allMessages),
             },
           )
-          appendDebugLog(`${identity.agentId} idle notification sent successfully`)
+          logForDebugging(`${identity.agentId} idle notification sent successfully`)
         } catch (e) {
-          appendDebugLog(`${identity.agentId} idle notification FAILED: ${e}`)
+          logForDebugging(`${identity.agentId} idle notification FAILED: ${e}`)
         }
       } else {
         logForDebugging(
@@ -1409,7 +1398,7 @@ export async function runInProcessTeammate(
         `[inProcessRunner] ${identity.agentId} finished prompt, waiting for next`,
       )
 
-      appendDebugLog(`${identity.agentId} NOW CALLING waitForNextPromptOrShutdown - will poll for messages`)
+      logForDebugging(`${identity.agentId} NOW CALLING waitForNextPromptOrShutdown - will poll for messages`)
       // Wait for next message or shutdown
       const waitResult = await waitForNextPromptOrShutdown(
         identity,
@@ -1419,7 +1408,7 @@ export async function runInProcessTeammate(
         setAppState,
         identity.parentSessionId,
       )
-      appendDebugLog(`${identity.agentId} waitForNextPromptOrShutdown returned: ${waitResult.type}`)
+      logForDebugging(`${identity.agentId} waitForNextPromptOrShutdown returned: ${waitResult.type}`)
 
       switch (waitResult.type) {
         case 'shutdown_request':

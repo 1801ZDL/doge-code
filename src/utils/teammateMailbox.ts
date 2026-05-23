@@ -51,7 +51,7 @@ export type TeammateMessage = {
 
 /**
  * Get the path to a teammate's inbox file
- * Structure: ~/.doge/teams/{team_name}/inboxes/{agent_name}.json
+ * Structure: ~/.dl/teams/{team_name}/inboxes/{agent_name}.json
  */
 export function getInboxPath(agentName: string, teamName?: string): string {
   const team = teamName || getTeamName() || 'default'

@@ -59,6 +59,8 @@ export type SpawnContext = {
 export type InProcessSpawnConfig = {
   /** Display name for the teammate, e.g., "researcher" */
   name: string
+  /** Optional human-readable display name for UI (falls back to name) */
+  displayName?: string
   /** Team this teammate belongs to */
   teamName: string
   /** Initial prompt/task for the teammate */
@@ -105,7 +107,7 @@ export async function spawnInProcessTeammate(
   config: InProcessSpawnConfig,
   context: SpawnContext,
 ): Promise<InProcessSpawnOutput> {
-  const { name, teamName, prompt, color, planModeRequired, model } = config
+  const { name, displayName, teamName, prompt, color, planModeRequired, model } = config
   const { setAppState } = context
 
   // Generate deterministic agent ID
@@ -128,6 +130,7 @@ export async function spawnInProcessTeammate(
     const identity: TeammateIdentity = {
       agentId,
       agentName: name,
+      displayName,
       teamName,
       color,
       planModeRequired,
@@ -139,6 +142,7 @@ export async function spawnInProcessTeammate(
     const teammateContext = createTeammateContext({
       agentId,
       agentName: name,
+      displayName,
       teamName,
       color,
       planModeRequired,

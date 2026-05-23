@@ -3,6 +3,7 @@ import * as React from 'react';
 import { Box, Text } from '../ink.js';
 import { useAppState } from '../state/AppState.js';
 import { getViewedTeammateTask } from '../state/selectors.js';
+import { getTeammateDisplayName } from '../tasks/InProcessTeammateTask/types.js';
 import { isLocalAgentTask } from '../tasks/LocalAgentTask/LocalAgentTask.js';
 import { toInkColor } from '../utils/ink.js';
 import { KeyboardShortcutHint } from './design-system/KeyboardShortcutHint.js';
@@ -34,11 +35,12 @@ export function TeammateViewHeader() {
   } else {
     t1 = $[2];
   }
+  const displayName = getTeammateDisplayName(viewedTeammate.identity);
   let t2;
-  if ($[3] !== nameColor || $[4] !== viewedTeammate.identity.agentName) {
-    t2 = <Text color={nameColor} bold={true}>@{viewedTeammate.identity.agentName}</Text>;
+  if ($[3] !== nameColor || $[4] !== displayName) {
+    t2 = <Text color={nameColor} bold={true}>@{displayName}</Text>;
     $[3] = nameColor;
-    $[4] = viewedTeammate.identity.agentName;
+    $[4] = displayName;
     $[5] = t2;
   } else {
     t2 = $[5];

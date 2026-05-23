@@ -1,6 +1,6 @@
 /**
  * Keybindings template generator.
- * Generates a well-documented template file for ~/.doge/keybindings.json
+ * Generates a well-documented template file for ~/.dl/keybindings.json
  */
 
 import { jsonStringify } from '../utils/slowOperations.js'

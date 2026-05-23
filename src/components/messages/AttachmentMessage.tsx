@@ -23,6 +23,7 @@ import { tryRenderPlanApprovalMessage, formatTeammateMessageContent } from './Pl
 import { BLACK_CIRCLE } from '../../constants/figures.js';
 import { TeammateMessageContent } from './UserTeammateMessage.js';
 import { isShutdownApproved } from '../../utils/teammateMailbox.js';
+import { getTeammateDisplayName } from '../../tasks/InProcessTeammateTask/types.js';
 import { CtrlOToExpand } from '../CtrlOToExpand.js';
 import { FilePathLink } from '../FilePathLink.js';
 import { feature } from 'bun:bundle';
@@ -472,11 +473,12 @@ function TeammateTaskStatus(t0) {
   } else {
     t3 = $[6];
   }
+  const displayName = getTeammateDisplayName(task.identity);
   let t4;
-  if ($[7] !== agentColor || $[8] !== task.identity.agentName) {
-    t4 = <Text color={agentColor} bold={true} dimColor={false}>@{task.identity.agentName}</Text>;
+  if ($[7] !== agentColor || $[8] !== displayName) {
+    t4 = <Text color={agentColor} bold={true} dimColor={false}>@{displayName}</Text>;
     $[7] = agentColor;
-    $[8] = task.identity.agentName;
+    $[8] = displayName;
     $[9] = t4;
   } else {
     t4 = $[9];

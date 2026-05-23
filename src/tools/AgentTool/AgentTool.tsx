@@ -695,8 +695,15 @@ export const AgentTool = buildTool({
         // inProcessRunner - has waitForNextPromptOrShutdown built in
         // Use a hardcoded default team name for coordinator mode since
         // coordinator mode doesn't have an established team context
+        // Derive a human-readable name from the task description when not provided.
+        // This makes workers easier to identify in the UI than random timestamps.
+        const workerName = name || description.toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '')
+          .substring(0, 30) || `worker-${Date.now()}`
         const result = await spawnTeammate({
-          name: name || `worker-${Date.now()}`,
+          name: workerName,
+          displayName: description.substring(0, 40),
           prompt,
           agent_type: selectedAgent.agentType,
           description,

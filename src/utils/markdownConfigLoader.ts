@@ -540,7 +540,7 @@ async function findMarkdownFilesNative(
 
 /**
  * Generic function to load markdown files from specified directories
- * @param dir Directory (eg. "~/.doge/commands")
+ * @param dir Directory (eg. "~/.dl/commands")
  * @returns Array of parsed markdown files with metadata
  */
 async function loadMarkdownFiles(dir: string): Promise<
@@ -566,20 +566,16 @@ async function loadMarkdownFiles(dir: string): Promise<
         )
   } catch (e: unknown) {
     // In some reconstructed or partially-installed environments the bundled
-    // ripgrep binary may be missing. Fall back to native fs traversal so
-    // custom agents/commands/skills still load after restart instead of only
-    // existing in memory for the current process.
-    const code = e && typeof e === 'object' && 'code' in e ? e.code : undefined
-    if (!useNative && code === 'ENOENT') {
+    // ripgrep binary may be missing or lack execute permission. Fall back to
+    // native fs traversal so custom agents/commands/skills still load after
+    // restart instead of only existing in memory for the current process.
+    if (!useNative && isFsInaccessible(e)) {
+      const code = e && typeof e === 'object' && 'code' in e ? e.code : undefined
       logForDebugging(
-        `ripgrep unavailable for ${dir}; falling back to native markdown search`,
+        `ripgrep failed for ${dir} (${code}); falling back to native markdown search`,
       )
       files = await findMarkdownFilesNative(dir, signal)
     } else {
-      // Handle missing/inaccessible dir directly instead of pre-checking
-      // existence (TOCTOU). findMarkdownFilesNative already catches internally;
-      // ripGrep rejects on inaccessible target paths.
-      if (isFsInaccessible(e)) return []
       throw e
     }
   }

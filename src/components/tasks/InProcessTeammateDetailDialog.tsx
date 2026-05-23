@@ -7,6 +7,7 @@ import { Box, Text, useTheme } from '../../ink.js';
 import { useKeybindings } from '../../keybindings/useKeybinding.js';
 import { getEmptyToolPermissionContext } from '../../Tool.js';
 import type { InProcessTeammateTaskState } from '../../tasks/InProcessTeammateTask/types.js';
+import { getTeammateDisplayName } from '../../tasks/InProcessTeammateTask/types.js';
 import { getTools } from '../../tools.js';
 import { formatNumber, truncateToWidth } from '../../utils/format.js';
 import { toInkColor } from '../../utils/ink.js';
@@ -122,11 +123,12 @@ export function InProcessTeammateDetailDialog(t0) {
   } else {
     t7 = $[15];
   }
+  const displayName = getTeammateDisplayName(teammate.identity);
   let t8;
-  if ($[16] !== t7 || $[17] !== teammate.identity.agentName) {
-    t8 = <Text color={t7}>@{teammate.identity.agentName}</Text>;
+  if ($[16] !== t7 || $[17] !== displayName) {
+    t8 = <Text color={t7}>@{displayName}</Text>;
     $[16] = t7;
-    $[17] = teammate.identity.agentName;
+    $[17] = displayName;
     $[18] = t8;
   } else {
     t8 = $[18];

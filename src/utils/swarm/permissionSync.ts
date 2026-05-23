@@ -107,7 +107,7 @@ export type PermissionResolution = {
 
 /**
  * Get the base directory for a team's permission requests
- * Path: ~/.doge/teams/{teamName}/permissions/
+ * Path: ~/.dl/teams/{teamName}/permissions/
  */
 export function getPermissionDir(teamName: string): string {
   return join(getTeamDir(teamName), 'permissions')

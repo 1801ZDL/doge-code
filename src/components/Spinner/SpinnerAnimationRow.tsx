@@ -5,6 +5,7 @@ import { useMemo, useRef } from 'react';
 import { stringWidth } from '../../ink/stringWidth.js';
 import { Box, Text, useAnimationFrame } from '../../ink.js';
 import type { InProcessTeammateTaskState } from '../../tasks/InProcessTeammateTask/types.js';
+import { getTeammateDisplayName } from '../../tasks/InProcessTeammateTask/types.js';
 import { formatDuration, formatNumber } from '../../utils/format.js';
 import { toInkColor } from '../../utils/ink.js';
 import type { Theme } from '../../utils/theme.js';
@@ -215,7 +216,7 @@ export function SpinnerAnimationRow({
   const status = foregroundedTeammate && !foregroundedTeammate.isIdle ? <>
         <Text dimColor>(esc to interrupt </Text>
         <Text color={toInkColor(foregroundedTeammate.identity.color)}>
-          {foregroundedTeammate.identity.agentName}
+          {getTeammateDisplayName(foregroundedTeammate.identity)}
         </Text>
         <Text dimColor>)</Text>
       </> : !foregroundedTeammate && parts.length > 0 ? thinkingOnly ? <Byline>{parts}</Byline> : <>

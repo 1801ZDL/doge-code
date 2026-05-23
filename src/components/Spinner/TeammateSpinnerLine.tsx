@@ -9,6 +9,7 @@ import { useTerminalSize } from '../../hooks/useTerminalSize.js';
 import { stringWidth } from '../../ink/stringWidth.js';
 import { Box, Text } from '../../ink.js';
 import type { InProcessTeammateTaskState } from '../../tasks/InProcessTeammateTask/types.js';
+import { getTeammateDisplayName } from '../../tasks/InProcessTeammateTask/types.js';
 import { summarizeRecentActivities } from '../../utils/collapseReadSearch.js';
 import { formatDuration, formatNumber, truncateToWidth } from '../../utils/format.js';
 import { toInkColor } from '../../utils/ink.js';
@@ -121,7 +122,8 @@ export function TeammateSpinnerLine({
   // Then optionally: @name + ": " OR just ": "
   // Then: activity text + optional extras (stats, hints)
   const basePrefix = 8;
-  const fullAgentName = `@${teammate.identity.agentName}`;
+  const displayName = getTeammateDisplayName(teammate.identity);
+  const fullAgentName = `@${displayName}`;
   const fullNameWidth = stringWidth(fullAgentName);
 
   // Get stats from progress
@@ -208,7 +210,7 @@ export function TeammateSpinnerLine({
         <Text dimColor={!isSelected}>{treeChar} </Text>
         {/* Agent name: hidden on very narrow screens */}
         {showName && <Text color={isSelected ? 'suggestion' : nameColor}>
-            @{teammate.identity.agentName}
+            @{displayName}
           </Text>}
         {showName && <Text dimColor={!isSelected}>: </Text>}
         {renderStatus()}

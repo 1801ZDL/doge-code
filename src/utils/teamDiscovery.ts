@@ -1,7 +1,7 @@
 /**
  * Team Discovery - Utilities for discovering teams and teammate status
  *
- * Scans ~/.doge/teams/ to find teams where the current session is the leader.
+ * Scans ~/.dl/teams/ to find teams where the current session is the leader.
  * Used by the Teams UI in the footer to show team status.
  */
 

@@ -48,12 +48,12 @@ function getPluginsDirectoryName(): string {
  *
  * Priority:
  * 1. CLAUDE_CODE_PLUGIN_CACHE_DIR env var (explicit override)
- * 2. Default: ~/.doge/plugins or ~/.doge/cowork_plugins
+ * 2. Default: ~/.dl/plugins or ~/.dl/cowork_plugins
  */
 export function getPluginsDirectory(): string {
   // expandTilde: when CLAUDE_CODE_PLUGIN_CACHE_DIR is set via settings.json
   // `env` (not shell), ~ is not expanded by the shell. Without this, a value
-  // like "~/.doge/plugins" becomes a literal `~` directory created in the
+  // like "~/.dl/plugins" becomes a literal `~` directory created in the
   // cwd of every project (gh-30794 / CC-212).
   const envOverride = process.env.CLAUDE_CODE_PLUGIN_CACHE_DIR
   if (envOverride) {

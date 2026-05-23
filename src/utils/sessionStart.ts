@@ -101,7 +101,7 @@ export async function processSessionStartHooks(
         errorMessage.includes('EPERM')
       ) {
         userGuidance =
-          'This appears to be a permissions issue. Check file permissions on ~/.doge/plugins/'
+          'This appears to be a permissions issue. Check file permissions on ~/.dl/plugins/'
       } else if (
         errorMessage.includes('Invalid') ||
         errorMessage.includes('parse') ||

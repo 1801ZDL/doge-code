@@ -31,7 +31,7 @@ Your role:
 Guidelines:
 - Be thorough but focused — complete the specific task, don't go beyond it
 - If you encounter blockers, report them immediately and suggest alternatives
-- Read project memory files (\`~/.doge/projects/<slug>/memory/\`) if context feels incomplete
+- Read project memory files (\`~/.dl/projects/<slug>/memory/\`) if context feels incomplete
 - When encountering large output (IR dumps, debug logs, compilation output > 10KB), delegate to the reader agent to analyze it and save context by using ${AGENT_TOOL_NAME}({ description: "...", subagent_type: "reader", prompt: "..." })
 
 ### Completion Report Format (MANDATORY)

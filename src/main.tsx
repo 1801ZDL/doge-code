@@ -748,7 +748,7 @@ export async function main() {
       }
       // Forward session-resume + model flags to the remote CLI's initial spawn.
       // --continue/-c and --resume <uuid> operate on the REMOTE session history
-      // (which persists under the remote's ~/.doge/projects/<cwd>/).
+      // (which persists under the remote's ~/.dl/projects/<cwd>/).
       // --model controls which model the remote uses.
       const extractFlag = (flag: string, opts: {
         hasValue?: boolean;
@@ -979,7 +979,7 @@ async function run(): Promise<CommanderCommand> {
     }
     profileCheckpoint('preAction_after_settings_sync');
   });
-  program.name('doge').description(`Doge Code - starts an interactive session by default, use -p/--print for non-interactive output`).argument('[prompt]', 'Your prompt', String)
+  program.name('dl').description(`DeLong Code - starts an interactive session by default, use -p/--print for non-interactive output`).argument('[prompt]', 'Your prompt', String)
   // Subcommands inherit helpOption via commander's copyInheritedSettings —
   // setting it once here covers mcp, plugin, auth, and all other subcommands.
   .helpOption('-h, --help', 'Display help for command').option('-d, --debug [filter]', 'Enable debug mode with optional category filtering (e.g., "api,hooks" or "!1p,!file")', (_value: string | true) => {
@@ -2539,7 +2539,7 @@ async function run(): Promise<CommanderCommand> {
     void logPermissionContextForAnts(null, 'initialization');
     logManagedSettings();
 
-    // Register PID file for concurrent-session detection (~/.doge/sessions/)
+    // Register PID file for concurrent-session detection (~/.dl/sessions/)
     // and fire multi-clauding telemetry. Lives here (not init.ts) so only the
     // REPL path registers — not subcommands like `claude doctor`. Chained:
     // count must run after register's write completes or it misses our own file.
@@ -4232,7 +4232,7 @@ async function run(): Promise<CommanderCommand> {
   });
 
   // Plugin uninstall command
-  pluginCmd.command('uninstall <plugin>').alias('remove').alias('rm').description('Uninstall an installed plugin').option('-s, --scope <scope>', 'Uninstall from scope: user, project, or local', 'user').option('--keep-data', "Preserve the plugin's persistent data directory (~/.doge/plugins/data/{id}/)").addOption(coworkOption()).action(async (plugin: string, options: {
+  pluginCmd.command('uninstall <plugin>').alias('remove').alias('rm').description('Uninstall an installed plugin').option('-s, --scope <scope>', 'Uninstall from scope: user, project, or local', 'user').option('--keep-data', "Preserve the plugin's persistent data directory (~/.dl/plugins/data/{id}/)").addOption(coworkOption()).action(async (plugin: string, options: {
     scope?: string;
     cowork?: boolean;
     keepData?: boolean;
