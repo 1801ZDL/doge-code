@@ -98,7 +98,7 @@
 这样做的目的，是避免以下问题：
 
 - 原版 [`Claude Code`](README.md) 的登录态污染 [`DeLong Code`](README.md)
-- 原版保存的 endpoint / token / model 配置影响 Doge 的代理转接逻辑
+- 原版保存的 endpoint / token / model 配置影响 DeLong 的代理转接逻辑
 - 两边共用 [`.claude.json`](README.md) 或 [`.claude/`](README.md) 导致奇怪的网络、认证、模型或 UI 异常
 
 如果用户以前装过原版 [`Claude Code`](README.md)，再运行 [`DeLong Code`](README.md) 时出现"明明没这么配却读到了旧配置"的现象，通常就是历史数据混用导致的。
