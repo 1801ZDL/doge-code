@@ -20,7 +20,7 @@ type BaseTextInputComponentProps = BaseTextInputProps & {
  * A base component for text inputs that handles rendering and basic input
  */
 export function BaseTextInput(t0) {
-  const $ = _c(14);
+  const $ = _c(16);
   const {
     inputState,
     children,
@@ -113,29 +113,41 @@ export function BaseTextInput(t0) {
   const t4 = "truncate-end";
   const t5 = showPlaceholder && props.placeholderElement ? props.placeholderElement : showPlaceholder && renderedPlaceholder ? <Ansi>{renderedPlaceholder}</Ansi> : <Ansi>{renderedValue}</Ansi>;
   const t6 = showArgumentHint && <Text dimColor={true}>{props.value?.endsWith(" ") ? "" : " "}{props.argumentHint}</Text>;
+
+  // Render input text and hint as siblings inside Box, not nested Text
   let t7;
-  if ($[4] !== T1 || $[5] !== children || $[6] !== props || $[7] !== t5 || $[8] !== t6) {
-    t7 = <T1 wrap={t4} dimColor={props.dimColor}>{t5}{t6}{children}</T1>;
+  if ($[4] !== T1 || $[5] !== props || $[6] !== t5) {
+    t7 = <T1 wrap={t4} dimColor={props.dimColor}>{t5}</T1>;
     $[4] = T1;
-    $[5] = children;
-    $[6] = props;
-    $[7] = t5;
-    $[8] = t6;
-    $[9] = t7;
+    $[5] = props;
+    $[6] = t5;
+    $[7] = t7;
   } else {
-    t7 = $[9];
+    t7 = $[7];
   }
+
   let t8;
-  if ($[10] !== T0 || $[11] !== cursorRef || $[12] !== t7) {
-    t8 = <T0 ref={cursorRef}>{t7}</T0>;
-    $[10] = T0;
-    $[11] = cursorRef;
-    $[12] = t7;
-    $[13] = t8;
+  if ($[8] !== t7 || $[9] !== t6 || $[10] !== children) {
+    t8 = <Box>{t7}{t6}{children}</Box>;
+    $[8] = t7;
+    $[9] = t6;
+    $[10] = children;
+    $[11] = t8;
   } else {
-    t8 = $[13];
+    t8 = $[11];
   }
-  return t8;
+
+  let t9;
+  if ($[12] !== T0 || $[13] !== cursorRef || $[14] !== t8) {
+    t9 = <T0 ref={cursorRef}>{t8}</T0>;
+    $[12] = T0;
+    $[13] = cursorRef;
+    $[14] = t8;
+    $[15] = t9;
+  } else {
+    t9 = $[15];
+  }
+  return t9;
 }
 
 function eventSafeCanSubmitAfterPaste(input: string): boolean {
