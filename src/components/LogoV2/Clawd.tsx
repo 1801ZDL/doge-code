@@ -28,10 +28,10 @@ type Segments = {
 }
 
 const POSES: Record<ClawdPose, Segments> = {
-  default: { r1L: '', r1E: '██████    █', r1R: '', r2L: '', r2R: '' },
-  'look-left': { r1L: '', r1E: '██████    █', r1R: '', r2L: '', r2R: '' },
-  'look-right': { r1L: '', r1E: '██████    █', r1R: '', r2L: '', r2R: '' },
-  'arms-up': { r1L: '', r1E: '██████    █', r1R: '', r2L: '', r2R: '' }
+  default: { r1L: ' \u2598', r1E: '████▝', r1R: '   █', r2L: '', r2R: '    █' },
+  'look-left': { r1L: ' \u2598', r1E: '████▝', r1R: '   █', r2L: '', r2R: '    █' },
+  'look-right': { r1L: ' \u2598', r1E: '████▝', r1R: '   █', r2L: '', r2R: '    █' },
+  'arms-up': { r1L: ' \u2598', r1E: '████▝', r1R: '   █', r2L: '', r2R: '    █' }
 }
 
 export function Clawd({ pose = 'default' }: Props = {}): React.ReactNode {
@@ -51,12 +51,16 @@ export function Clawd({ pose = 'default' }: Props = {}): React.ReactNode {
       <Text>
         <Text color="clawd_body">{p.r2L}</Text>
         <Text color="clawd_body" backgroundColor="clawd_background">
-          {'█    █    █'}
+          {'█    █'}
         </Text>
         <Text color="clawd_body">{p.r2R}</Text>
       </Text>
-      <Text color="clawd_body">
-        {'██████   ███'}
+      <Text>
+        <Text color="clawd_body">{' \u2596'}</Text>
+        <Text color="clawd_body" backgroundColor="clawd_background">
+          {'████▗'}
+        </Text>
+        <Text color="clawd_body">{' ███'}</Text>
       </Text>
     </Box>
   )
@@ -65,9 +69,9 @@ export function Clawd({ pose = 'default' }: Props = {}): React.ReactNode {
 function AppleTerminalClawd({ pose }: { pose: ClawdPose }): React.ReactNode {
   return (
     <Box flexDirection="column" alignItems="center">
-      <Text color="clawd_body">{'██████    █'}</Text>
+      <Text color="clawd_body">{' \u2598████▝   █'}</Text>
       <Text color="clawd_body">{'█    █    █'}</Text>
-      <Text color="clawd_body">{'██████   ███'}</Text>
+      <Text color="clawd_body">{' \u2596████▗ ███'}</Text>
     </Box>
   )
 }
