@@ -18,7 +18,7 @@ import { useAppState, useAppStateStore } from '../state/AppState.js';
 import type { AgentDefinition } from '../tools/AgentTool/loadAgentsDir.js';
 import type { InlineGhostText, PromptInputMode } from '../types/textInputTypes.js';
 import { isAgentSwarmsEnabled } from '../utils/agentSwarmsEnabled.js';
-import { generateProgressiveArgumentHint, parseArguments } from '../utils/argumentSubstitution.js';
+import { generateProgressiveArgumentHint, generateSmartArgumentHint, parseArguments } from '../utils/argumentSubstitution.js';
 import { getShellCompletions, type ShellCompletionType } from '../utils/bash/shellCompletion.js';
 import { formatLogMetadata } from '../utils/format.js';
 import { getSessionIdFromLog, searchSessionsByCustomTitle } from '../utils/sessionStorage.js';
@@ -748,12 +748,13 @@ export function useTypeahead({
         if (spaceIndex !== -1) {
           const exactMatch = commands.find(cmd => getCommandName(cmd) === commandName);
           if (exactMatch || hasRealArguments) {
-            // Priority 1: Static argumentHint (only on first trailing space for backwards compat)
-            if (exactMatch?.argumentHint && hasExactlyOneTrailingSpace) {
-              commandArgumentHint = exactMatch.argumentHint;
+            // Priority 1: Smart dynamic hint for local commands (persists while typing args)
+            if (exactMatch?.type === 'local' && exactMatch.argumentHint) {
+              const argsText = value.slice(spaceIndex + 1);
+              commandArgumentHint = generateSmartArgumentHint(exactMatch.argumentHint, argsText);
             }
-            // Priority 2: Progressive hint from argNames (show when trailing space)
-            else if (exactMatch?.type === 'prompt' && exactMatch.argNames?.length && value.endsWith(' ')) {
+            // Priority 2: Progressive hint from argNames (persists while typing args)
+            else if (exactMatch?.type === 'prompt' && exactMatch.argNames?.length) {
               const argsText = value.slice(spaceIndex + 1);
               const typedArgs = parseArguments(argsText);
               commandArgumentHint = generateProgressiveArgumentHint(exactMatch.argNames, typedArgs);

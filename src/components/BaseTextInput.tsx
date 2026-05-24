@@ -92,8 +92,8 @@ export function BaseTextInput(t0) {
   useInput(wrappedOnInput, {
     isActive: props.focus
   });
-  const commandWithoutArgs = props.value && props.value.trim().indexOf(" ") === -1 || props.value && props.value.endsWith(" ");
-  const showArgumentHint = Boolean(props.argumentHint && props.value && commandWithoutArgs && props.value.startsWith("/"));
+  const isSlashCommand = props.value && props.value.startsWith("/")
+  const showArgumentHint = Boolean(props.argumentHint && props.value && isSlashCommand)
   const cursorFiltered = props.showCursor && props.highlights ? props.highlights.filter(h => h.dimColor || props.cursorOffset < h.start || props.cursorOffset >= h.end) : props.highlights;
   const {
     viewportCharOffset,

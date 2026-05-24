@@ -83,6 +83,90 @@ export function generateProgressiveArgumentHint(
 }
 
 /**
+ * Normalize a flag name for alias matching by removing leading dashes and all dashes.
+ * Examples: "--base-url" -> "baseurl", "--baseurl" -> "baseurl", "--provider" -> "provider"
+ */
+function normalizeFlagName(flag: string): string {
+  return flag.replace(/^-+/, '').replace(/-/g, '').toLowerCase()
+}
+
+/**
+ * Generate a smart argument hint that filters out already-provided flags/args.
+ * Supports flag aliases: --baseurl matches --base-url, --apikey matches --api-key.
+ *
+ * @param argumentHint - The original hint string like "[model-name] [--provider <name>] [--base-url <url>]"
+ * @param typedArgs - The raw arguments string the user has typed
+ * @returns Filtered hint string, or undefined if all args consumed
+ */
+export function generateSmartArgumentHint(
+  argumentHint: string,
+  typedArgs: string,
+): string | undefined {
+  if (!argumentHint || !typedArgs.trim()) {
+    return argumentHint
+  }
+
+  // Parse the argumentHint into items
+  const items: { full: string; flag?: string }[] = []
+  const regex = /\[([^\]]+)\]/g
+  let match
+  while ((match = regex.exec(argumentHint)) !== null) {
+    const content = match[1]!
+    const flagMatch = content.match(/^(--\S+)(?:\s+.*)?$/)
+    items.push({
+      full: match[0]!,
+      flag: flagMatch ? flagMatch[1] : undefined,
+    })
+  }
+
+  if (items.length === 0) {
+    return argumentHint
+  }
+
+  // Parse typed args into tokens
+  const tokens = parseArguments(typedArgs)
+  const consumedFlags = new Set<string>()
+  let positionalConsumed = false
+
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i]!
+    if (token.startsWith('--')) {
+      // Find matching flag by exact match or normalized alias match
+      const normalizedToken = normalizeFlagName(token)
+      const item = items.find(
+        item =>
+          item.flag === token ||
+          (item.flag && normalizeFlagName(item.flag) === normalizedToken),
+      )
+      if (item?.flag) {
+        consumedFlags.add(item.flag)
+        // Consume the flag's value token if present
+        if (i + 1 < tokens.length && !tokens[i + 1]!.startsWith('--')) {
+          i++
+        }
+      }
+    } else if (!positionalConsumed) {
+      positionalConsumed = true
+    }
+  }
+
+  // Build remaining hint
+  const remaining = items.filter(item => {
+    if (item.flag) {
+      return !consumedFlags.has(item.flag)
+    }
+    // Positional arg
+    return !positionalConsumed
+  })
+
+  if (remaining.length === 0) {
+    return undefined
+  }
+
+  return remaining.map(item => item.full).join(' ')
+}
+
+/**
  * Substitute $ARGUMENTS placeholders in content with actual argument values.
  *
  * @param content - The content containing placeholders
