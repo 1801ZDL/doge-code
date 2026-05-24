@@ -56,7 +56,7 @@ export function Clawd({ pose = 'default' }: Props = {}): React.ReactNode {
         <Text color="clawd_body">{p.r2R}</Text>
       </Text>
       <Text color="clawd_body">
-        {'██████    █'}
+        {'██████   ███'}
       </Text>
     </Box>
   )
@@ -67,7 +67,7 @@ function AppleTerminalClawd({ pose }: { pose: ClawdPose }): React.ReactNode {
     <Box flexDirection="column" alignItems="center">
       <Text color="clawd_body">{'██████    █'}</Text>
       <Text color="clawd_body">{'█    █    █'}</Text>
-      <Text color="clawd_body">{'██████    █'}</Text>
+      <Text color="clawd_body">{'██████   ███'}</Text>
     </Box>
   )
 }
