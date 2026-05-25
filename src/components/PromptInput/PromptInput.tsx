@@ -2217,7 +2217,7 @@ function PromptInput({
 
     // In-process teammates run headless - don't apply teammate colors to leader UI
     if (isInProcessTeammate()) {
-      return 'promptBorder';
+      return '#00B4D8' as keyof Theme;
     }
 
     // Check for teammate color from environment
@@ -2225,10 +2225,10 @@ function PromptInput({
     if (teammateColorName && AGENT_COLORS.includes(teammateColorName as AgentColorName)) {
       return AGENT_COLOR_TO_THEME_COLOR[teammateColorName as AgentColorName];
     }
-    return 'promptBorder';
+    return '#00B4D8' as keyof Theme;
   };
   if (isExternalEditorActive) {
-    return <Box flexDirection="row" alignItems="center" justifyContent="center" borderColor={getBorderColor()} borderStyle="round" borderLeft={false} borderRight={false} borderBottom width="100%">
+    return <Box flexDirection="row" alignItems="center" justifyContent="center" borderColor={getBorderColor()} borderStyle="single" borderLeft={false} borderRight={false} borderBottom width="100%">
         <Text dimColor italic>
           Save and close editor to continue...
         </Text>
@@ -2259,7 +2259,7 @@ function PromptInput({
             </Box>
           </Box>
           <Text color={swarmBanner.bgColor}>{'─'.repeat(columns)}</Text>
-        </> : <Box flexDirection="row" alignItems="flex-start" justifyContent="flex-start" borderColor={getBorderColor()} borderStyle="round" borderLeft={false} borderRight={false} borderBottom width="100%" borderText={buildBorderText(showFastIcon ?? false, showFastIconHint, fastModeCooldown)}>
+        </> : <Box flexDirection="row" alignItems="flex-start" justifyContent="flex-start" borderColor={getBorderColor()} borderStyle="single" width="100%" borderText={buildBorderText(showFastIcon ?? false, showFastIconHint, fastModeCooldown)}>
           <PromptInputModeIndicator mode={mode} isLoading={isLoading} viewingAgentName={viewingAgentName} viewingAgentColor={viewingAgentColor} />
           <Box flexGrow={1} flexShrink={1} onClick={handleInputClick}>
             {textInputElement}

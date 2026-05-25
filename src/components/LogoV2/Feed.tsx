@@ -3,6 +3,35 @@ import * as React from 'react';
 import { stringWidth } from '../../ink/stringWidth.js';
 import { Box, Text } from '../../ink.js';
 import { truncate } from '../../utils/format.js';
+
+function wrapText(text: string, maxWidth: number): string {
+  if (stringWidth(text) <= maxWidth) return text;
+  const words = text.split(' ');
+  const lines: string[] = [];
+  let current = '';
+  for (const word of words) {
+    const test = current ? current + ' ' + word : word;
+    if (stringWidth(test) <= maxWidth) {
+      current = test;
+    } else {
+      if (current) lines.push(current);
+      if (stringWidth(word) > maxWidth) {
+        let remain = word;
+        while (stringWidth(remain) > maxWidth) {
+          let cut = maxWidth;
+          while (cut > 0 && stringWidth(remain.slice(0, cut)) > maxWidth) cut--;
+          lines.push(remain.slice(0, Math.max(cut, 1)));
+          remain = remain.slice(Math.max(cut, 1));
+        }
+        current = remain || '';
+      } else {
+        current = word;
+      }
+    }
+  }
+  if (current) lines.push(current);
+  return lines.join('\n');
+}
 export type FeedLine = {
   text: string;
   timestamp?: string;
@@ -72,7 +101,7 @@ export function Feed(t0) {
   const maxTimestampWidth = t1;
   let t2;
   if ($[2] !== title) {
-    t2 = <Text bold={true} color="claude">{title}</Text>;
+    t2 = <Text bold={true} color="#00B4D8">{title}</Text>;
     $[2] = title;
     $[3] = t2;
   } else {
@@ -82,7 +111,7 @@ export function Feed(t0) {
   if ($[4] !== actualWidth || $[5] !== customContent || $[6] !== emptyMessage || $[7] !== footer || $[8] !== lines || $[9] !== maxTimestampWidth) {
     t3 = customContent ? <>{customContent.content}{footer && <Text dimColor={true} italic={true}>{truncate(footer, actualWidth)}</Text>}</> : lines.length === 0 && emptyMessage ? <Text dimColor={true}>{truncate(emptyMessage, actualWidth)}</Text> : <>{lines.map((line_0, index) => {
         const textWidth = Math.max(10, actualWidth - (maxTimestampWidth > 0 ? maxTimestampWidth + 2 : 0));
-        return <Text key={index}>{maxTimestampWidth > 0 && <><Text dimColor={true}>{(line_0.timestamp || "").padEnd(maxTimestampWidth)}</Text>{"  "}</>}<Text>{truncate(line_0.text, textWidth)}</Text></Text>;
+        return <Text key={index}>{maxTimestampWidth > 0 && <><Text dimColor={true}>{(line_0.timestamp || "").padEnd(maxTimestampWidth)}</Text>{"  "}</>}<Text>{wrapText(line_0.text, textWidth)}</Text></Text>;
       })}{footer && <Text dimColor={true} italic={true}>{truncate(footer, actualWidth)}</Text>}</>;
     $[4] = actualWidth;
     $[5] = customContent;
