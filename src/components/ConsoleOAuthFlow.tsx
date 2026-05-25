@@ -608,7 +608,7 @@ function OAuthStatusMessage(t0) {
       }
     case "idle":
       {
-        const t1 = startingMessage ? startingMessage : "Claude Code can be used with your Claude subscription or billed based on API usage through your Console account.";
+        const t1 = startingMessage ? startingMessage : "Configure your API endpoint. You can use a compatible API provider or connect with your subscription account.";
         let t2;
         if ($[0] !== t1) {
           t2 = <Text bold={true}>{t1}</Text>;

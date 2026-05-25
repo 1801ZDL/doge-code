@@ -1,7 +1,7 @@
 import { feature } from 'bun:bundle'
-import { shouldAutoEnableClaudeInChrome } from 'src/utils/claudeInChrome/setup.js'
+import { shouldAutoEnableClaudeInChrome } from 'src/utils/browserIntegration/setup.js'
 import { registerBatchSkill } from './batch.js'
-import { registerClaudeInChromeSkill } from './claudeInChrome.js'
+import { registerClaudeInChromeSkill } from './browserIntegration.js'
 import { registerCompeteSkill } from './compete.js'
 import { registerDebugSkill } from './debug.js'
 import { registerInitMemorySkill } from './initMemory.js'
@@ -69,9 +69,9 @@ export function initBundledSkills(): void {
   }
   if (feature('BUILDING_CLAUDE_APPS')) {
     /* eslint-disable @typescript-eslint/no-require-imports */
-    const { registerClaudeApiSkill } = require('./claudeApi.js')
+    const { registerDlApiSkill } = require('./dlApi.js')
     /* eslint-enable @typescript-eslint/no-require-imports */
-    registerClaudeApiSkill()
+    registerDlApiSkill()
   }
   if (shouldAutoEnableClaudeInChrome()) {
     registerClaudeInChromeSkill()

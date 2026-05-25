@@ -60,8 +60,8 @@ export function shouldEnableClaudeInChrome(chromeFlag?: boolean): boolean {
 
   // Check default config settings
   const config = getGlobalConfig()
-  if (config.claudeInChromeDefaultEnabled !== undefined) {
-    return config.claudeInChromeDefaultEnabled
+  if (config.browserIntegrationDefaultEnabled !== undefined) {
+    return config.browserIntegrationDefaultEnabled
   }
 
   return false

@@ -102,7 +102,7 @@ export const findGitBashPath = memoize((): string => {
     }
     // biome-ignore lint/suspicious/noConsole:: intentional console output
     console.error(
-      `Claude Code was unable to find DL_CODE_GIT_BASH_PATH path "${process.env.DL_CODE_GIT_BASH_PATH}"`,
+      `dl-code was unable to find DL_CODE_GIT_BASH_PATH path "${process.env.DL_CODE_GIT_BASH_PATH}"`,
     )
     // eslint-disable-next-line custom-rules/no-process-exit
     process.exit(1)

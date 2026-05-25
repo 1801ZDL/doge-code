@@ -109,7 +109,7 @@ export function getDefaultVertexRegion(): string {
  * @returns true if CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR is set to a truthy value
  */
 export function shouldMaintainProjectWorkingDir(): boolean {
-  return isEnvTruthy(process.env.CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR)
+  return isEnvTruthy(process.env.DL_BASH_MAINTAIN_PROJECT_WORKING_DIR) || isEnvTruthy(process.env.CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR)
 }
 
 /**

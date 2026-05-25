@@ -500,8 +500,8 @@ export type GlobalConfig = {
   officialMarketplaceAutoInstallNextRetryTime?: number // Earliest time to retry again
 
   // Claude in Chrome settings
-  hasCompletedClaudeInChromeOnboarding?: boolean // Whether Claude in Chrome onboarding has been shown
-  claudeInChromeDefaultEnabled?: boolean // Whether Claude in Chrome is enabled by default (undefined means platform default)
+  hasCompletedBrowserIntegrationOnboarding?: boolean // Whether Claude in Chrome onboarding has been shown
+  browserIntegrationDefaultEnabled?: boolean // Whether Claude in Chrome is enabled by default (undefined means platform default)
   cachedChromeExtensionInstalled?: boolean // Cached result of whether Chrome extension is installed
 
   // Chrome extension pairing state (persisted across sessions)
@@ -674,8 +674,8 @@ export const GLOBAL_CONFIG_KEYS = [
   'inputNeededNotifEnabled',
   'agentPushNotifEnabled',
   'respectGitignore',
-  'claudeInChromeDefaultEnabled',
-  'hasCompletedClaudeInChromeOnboarding',
+  'browserIntegrationDefaultEnabled',
+  'hasCompletedBrowserIntegrationOnboarding',
   'lspRecommendationDisabled',
   'lspRecommendationNeverPlugins',
   'lspRecommendationIgnoredCount',

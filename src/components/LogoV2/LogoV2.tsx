@@ -154,7 +154,7 @@ export function LogoV2() {
       : [whatsNewFeed, tipsFeed];
 
   const feedWidth = Math.max(20, (columns - 10) / 2);
-  const showFeeds = layoutMode !== 'compact';
+  const showFeeds = layoutMode !== 'compact' && feedWidth >= 35;
 
   return (
     <>

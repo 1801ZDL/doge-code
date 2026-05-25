@@ -2,6 +2,7 @@
 import addDir from './commands/add-dir/index.js'
 import addModel from './commands/add-model/index.js'
 import removeModel from './commands/remove-model/index.js'
+import cost from './commands/cost/index.js'
 import autofixPr from './commands/autofix-pr/index.js'
 import backfillSessions from './commands/backfill-sessions/index.js'
 import btw from './commands/btw/index.js'
@@ -18,7 +19,7 @@ import commitPushPr from './commands/commit-push-pr.js'
 import compact from './commands/compact/index.js'
 import config from './commands/config/index.js'
 import { context, contextNonInteractive } from './commands/context/index.js'
-import cost from './commands/cost/index.js'
+
 import diff from './commands/diff/index.js'
 import ctx_viz from './commands/ctx_viz/index.js'
 import doctor from './commands/doctor/index.js'
@@ -30,7 +31,7 @@ import initVerifiers from './commands/init-verifiers.js'
 import keybindings from './commands/keybindings/index.js'
 import login from './commands/login/index.js'
 import logout from './commands/logout/index.js'
-import installGitHubApp from './commands/install-github-app/index.js'
+
 import installSlackApp from './commands/install-slack-app/index.js'
 import breakCache from './commands/break-cache/index.js'
 import mcp from './commands/mcp/index.js'
@@ -128,7 +129,7 @@ import permissions from './commands/permissions/index.js'
 import plan from './commands/plan/index.js'
 import queue from './commands/queue/index.js'
 import fast from './commands/fast/index.js'
-import passes from './commands/passes/index.js'
+
 import privacySettings from './commands/privacy-settings/index.js'
 import hooks from './commands/hooks/index.js'
 import files from './commands/files/index.js'
@@ -181,10 +182,6 @@ import tag from './commands/tag/index.js'
 import outputStyle from './commands/output-style/index.js'
 import remoteEnv from './commands/remote-env/index.js'
 import upgrade from './commands/upgrade/index.js'
-import {
-  extraUsage,
-  extraUsageNonInteractive,
-} from './commands/extra-usage/index.js'
 import rateLimitOptions from './commands/rate-limit-options/index.js'
 import statusline from './commands/statusline.js'
 import effort from './commands/effort/index.js'
@@ -277,7 +274,6 @@ const COMMANDS = memoize((): Command[] => [
   context,
   contextNonInteractive,
   coordinator,
-  cost,
   diff,
   doctor,
   effort,
@@ -290,7 +286,6 @@ const COMMANDS = memoize((): Command[] => [
   ide,
   init,
   keybindings,
-  installGitHubApp,
   installSlackApp,
   mcp,
   memory,
@@ -320,8 +315,6 @@ const COMMANDS = memoize((): Command[] => [
   securityReview,
   terminalSetup,
   upgrade,
-  extraUsage,
-  extraUsageNonInteractive,
   rateLimitOptions,
   usage,
   usageReport,
@@ -344,7 +337,6 @@ const COMMANDS = memoize((): Command[] => [
   exportCommand,
   sandboxToggle,
   ...(!isUsing3PServices() ? [logout, login()] : []),
-  passes,
   queue,
   ...(peersCmd ? [peersCmd] : []),
   tasks,

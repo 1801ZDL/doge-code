@@ -1721,15 +1721,15 @@ export function getSubscriptionName(): string {
 
   switch (subscriptionType) {
     case 'enterprise':
-      return 'Claude Enterprise'
+      return 'DeLong Enterprise'
     case 'team':
-      return 'Claude Team'
+      return 'DeLong Team'
     case 'max':
-      return 'Claude Max'
+      return 'DeLong Max'
     case 'pro':
-      return 'Claude Pro'
+      return 'DeLong Pro'
     default:
-      return 'Claude API'
+      return 'DeLong API'
   }
 }
 

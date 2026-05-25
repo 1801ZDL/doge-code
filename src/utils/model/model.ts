@@ -38,7 +38,7 @@ export type ModelName = string
 export type ModelSetting = ModelName | ModelAlias | null
 
 export function getSmallFastModel(): ModelName {
-  return process.env.ANTHROPIC_SMALL_FAST_MODEL || getDefaultHaikuModel()
+  return process.env.DL_SMALL_FAST_MODEL || process.env.ANTHROPIC_SMALL_FAST_MODEL || getDefaultHaikuModel()
 }
 
 export function isNonCustomOpusModel(model: ModelName): boolean {
@@ -70,7 +70,7 @@ export function getUserSpecifiedModelSetting(): ModelSetting | undefined {
     specifiedModel = modelOverride
   } else {
     const settings = getSettings_DEPRECATED() || {}
-    specifiedModel = process.env.ANTHROPIC_MODEL || settings.model || undefined
+    specifiedModel = process.env.DL_MODEL || process.env.ANTHROPIC_MODEL || settings.model || undefined
   }
 
   // Ignore the user-specified model if it's not in the availableModels allowlist.
@@ -107,6 +107,9 @@ export function getBestModel(): ModelName {
 
 // @[MODEL LAUNCH]: Update the default Opus model (3P providers may lag so keep defaults unchanged).
 export function getDefaultOpusModel(): ModelName {
+  if (process.env.DL_DEFAULT_OPUS_MODEL) {
+    return process.env.DL_DEFAULT_OPUS_MODEL
+  }
   if (process.env.ANTHROPIC_DEFAULT_OPUS_MODEL) {
     return process.env.ANTHROPIC_DEFAULT_OPUS_MODEL
   }
@@ -121,6 +124,9 @@ export function getDefaultOpusModel(): ModelName {
 
 // @[MODEL LAUNCH]: Update the default Sonnet model (3P providers may lag so keep defaults unchanged).
 export function getDefaultSonnetModel(): ModelName {
+  if (process.env.DL_DEFAULT_SONNET_MODEL) {
+    return process.env.DL_DEFAULT_SONNET_MODEL
+  }
   if (process.env.ANTHROPIC_DEFAULT_SONNET_MODEL) {
     return process.env.ANTHROPIC_DEFAULT_SONNET_MODEL
   }
@@ -133,6 +139,9 @@ export function getDefaultSonnetModel(): ModelName {
 
 // @[MODEL LAUNCH]: Update the default Haiku model (3P providers may lag so keep defaults unchanged).
 export function getDefaultHaikuModel(): ModelName {
+  if (process.env.DL_DEFAULT_HAIKU_MODEL) {
+    return process.env.DL_DEFAULT_HAIKU_MODEL
+  }
   if (process.env.ANTHROPIC_DEFAULT_HAIKU_MODEL) {
     return process.env.ANTHROPIC_DEFAULT_HAIKU_MODEL
   }
@@ -379,9 +388,9 @@ export function renderModelName(model: ModelName): string {
 export function getPublicModelName(model: ModelName): string {
   const publicName = getPublicModelDisplayName(model)
   if (publicName) {
-    return `Claude ${publicName}`
+    return `DL ${publicName}`
   }
-  return `Claude ${renderModelName(model)}`
+  return `DL ${renderModelName(model)}`
 }
 
 /**

@@ -987,18 +987,18 @@ export function Config({
       });
     }
   }] : []), {
-    id: 'claudeInChromeDefaultEnabled',
+    id: 'browserIntegrationDefaultEnabled',
     label: 'Claude in Chrome enabled by default',
-    value: globalConfig.claudeInChromeDefaultEnabled ?? true,
+    value: globalConfig.browserIntegrationDefaultEnabled ?? true,
     type: 'boolean' as const,
     onChange(enabled_5: boolean) {
       saveGlobalConfig(current_18 => ({
         ...current_18,
-        claudeInChromeDefaultEnabled: enabled_5
+        browserIntegrationDefaultEnabled: enabled_5
       }));
       setGlobalConfig({
         ...getGlobalConfig(),
-        claudeInChromeDefaultEnabled: enabled_5
+        browserIntegrationDefaultEnabled: enabled_5
       });
       logEvent('tengu_claude_in_chrome_setting_changed', {
         enabled: enabled_5

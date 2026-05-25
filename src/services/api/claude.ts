@@ -177,8 +177,8 @@ import {
   shouldIncludeFirstPartyOnlyBetas,
   shouldUseGlobalCacheScope,
 } from 'src/utils/betas.js'
-import { CLAUDE_IN_CHROME_MCP_SERVER_NAME } from 'src/utils/claudeInChrome/common.js'
-import { CHROME_TOOL_SEARCH_INSTRUCTIONS } from 'src/utils/claudeInChrome/prompt.js'
+import { CLAUDE_IN_CHROME_MCP_SERVER_NAME } from 'src/utils/browserIntegration/common.js'
+import { CHROME_TOOL_SEARCH_INSTRUCTIONS } from 'src/utils/browserIntegration/prompt.js'
 import { getMaxThinkingTokensForModel } from 'src/utils/context.js'
 import { logForDebugging } from 'src/utils/debug.js'
 import { logForDiagnosticsNoPII } from 'src/utils/diagLogs.js'
@@ -1854,13 +1854,13 @@ async function* queryModel(
           const reader = await createGeminiCompatStream(
             {
               apiKey: customApiConfig.apiKey || process.env.DL_API_KEY || '',
-              baseURL: customApiConfig.baseURL || process.env.ANTHROPIC_BASE_URL || '',
+              baseURL: customApiConfig.baseURL || process.env.DL_BASE_URL || process.env.ANTHROPIC_BASE_URL || '',
               headers: clientRequestId
                 ? { [CLIENT_REQUEST_ID_HEADER]: clientRequestId }
                 : undefined,
               fetch: globalThis.fetch,
             },
-            customApiConfig.model?.trim() || process.env.ANTHROPIC_MODEL?.trim() || params.model,
+            customApiConfig.model?.trim() || process.env.DL_MODEL || process.env.ANTHROPIC_MODEL?.trim() || params.model,
             geminiRequest,
             signal,
           )
@@ -1873,7 +1873,7 @@ async function* queryModel(
         if (compatProvider === 'openai') {
           const compatConfig = {
             apiKey: customApiConfig.apiKey || process.env.DL_API_KEY || '',
-            baseURL: customApiConfig.baseURL || process.env.ANTHROPIC_BASE_URL || '',
+            baseURL: customApiConfig.baseURL || process.env.DL_BASE_URL || process.env.ANTHROPIC_BASE_URL || '',
             headers: clientRequestId
               ? { [CLIENT_REQUEST_ID_HEADER]: clientRequestId }
               : undefined,

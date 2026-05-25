@@ -106,7 +106,7 @@ export async function getAnthropicClient({
   const modelSpecificConfig = model ? getModelEndpointConfig(model) : undefined
   const containerId = process.env.DL_CODE_CONTAINER_ID
   const remoteSessionId = process.env.DL_CODE_REMOTE_SESSION_ID
-  const clientApp = process.env.CLAUDE_AGENT_SDK_CLIENT_APP
+  const clientApp = process.env.DL_AGENT_SDK_CLIENT_APP || process.env.CLAUDE_AGENT_SDK_CLIENT_APP
   const customHeaders = getCustomHeaders()
   const defaultHeaders: { [key: string]: string } = {
     'x-app': 'cli',
@@ -165,8 +165,8 @@ export async function getAnthropicClient({
     // Use region override for small fast model if specified
     const awsRegion =
       model === getSmallFastModel() &&
-      process.env.ANTHROPIC_SMALL_FAST_MODEL_AWS_REGION
-        ? process.env.ANTHROPIC_SMALL_FAST_MODEL_AWS_REGION
+      process.env.DL_SMALL_FAST_MODEL_AWS_REGION || process.env.ANTHROPIC_SMALL_FAST_MODEL_AWS_REGION
+        ? (process.env.DL_SMALL_FAST_MODEL_AWS_REGION || process.env.ANTHROPIC_SMALL_FAST_MODEL_AWS_REGION)
         : getAWSRegion()
 
     const bedrockArgs: ConstructorParameters<typeof AnthropicBedrock>[0] = {
@@ -203,7 +203,7 @@ export async function getAnthropicClient({
     // Determine Azure AD token provider based on configuration
     // SDK reads ANTHROPIC_FOUNDRY_API_KEY by default
     let azureADTokenProvider: (() => Promise<string>) | undefined
-    if (!process.env.ANTHROPIC_FOUNDRY_API_KEY) {
+    if (!process.env.DL_FOUNDRY_API_KEY && !process.env.ANTHROPIC_FOUNDRY_API_KEY) {
       if (isEnvTruthy(process.env.DL_CODE_SKIP_FOUNDRY_AUTH)) {
         // Mock token provider for testing/proxy scenarios (similar to Vertex mock GoogleAuth)
         azureADTokenProvider = () => Promise.resolve('')
@@ -293,7 +293,7 @@ export async function getAnthropicClient({
           ...(hasProjectEnvVar || hasKeyFile
             ? {}
             : {
-                projectId: process.env.ANTHROPIC_VERTEX_PROJECT_ID,
+                projectId: process.env.DL_VERTEX_PROJECT_ID || process.env.ANTHROPIC_VERTEX_PROJECT_ID,
               }),
         })
 
@@ -327,7 +327,7 @@ export async function getAnthropicClient({
   // For anthropic provider with custom baseURL (e.g., sglang with anthropic format),
   // use the baseURL from modelEndpointMap, customApiStorage, or ANTHROPIC_BASE_URL env var
   if (customApiProvider === 'anthropic' && !isEnvTruthy(process.env.USE_STAGING_OAUTH)) {
-    const customBaseURL = modelSpecificConfig?.baseURL || customApiStorage.baseURL || process.env.ANTHROPIC_BASE_URL
+    const customBaseURL = modelSpecificConfig?.baseURL || customApiStorage.baseURL || process.env.DL_BASE_URL || process.env.ANTHROPIC_BASE_URL
     if (customBaseURL) {
       clientConfig.baseURL = customBaseURL
     }
@@ -357,7 +357,7 @@ async function configureApiKeyHeaders(
 ): Promise<void> {
   const token =
     modelApiKey ||
-    process.env.ANTHROPIC_AUTH_TOKEN ||
+    process.env.DL_AUTH_TOKEN || process.env.ANTHROPIC_AUTH_TOKEN ||
     (await getApiKeyFromApiKeyHelper(isNonInteractiveSession))
   if (token) {
     headers['Authorization'] = `Bearer ${token}`
@@ -366,7 +366,7 @@ async function configureApiKeyHeaders(
 
 function getCustomHeaders(): Record<string, string> {
   const customHeaders: Record<string, string> = {}
-  const customHeadersEnv = process.env.ANTHROPIC_CUSTOM_HEADERS
+  const customHeadersEnv = process.env.DL_CUSTOM_HEADERS || process.env.ANTHROPIC_CUSTOM_HEADERS
 
   if (!customHeadersEnv) return customHeaders
 

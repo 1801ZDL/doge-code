@@ -7,9 +7,9 @@ import { isEnvDefinedFalsy } from '../utils/envUtils.js'
 import { getAPIProvider } from '../utils/model/providers.js'
 import { getWorkload } from '../utils/workloadContext.js'
 
-const DEFAULT_PREFIX = `You are Claude Code, Anthropic's official CLI for Claude.`
-const AGENT_SDK_DL_CODE_PRESET_PREFIX = `You are Claude Code, Anthropic's official CLI for Claude, running within the Claude Agent SDK.`
-const AGENT_SDK_PREFIX = `You are a Claude agent, built on Anthropic's Claude Agent SDK.`
+const DEFAULT_PREFIX = `You are DeLong Code (dl-code), a CLI for AI-powered software engineering.`
+const AGENT_SDK_DL_CODE_PRESET_PREFIX = `You are DeLong Code (dl-code), a CLI for AI-powered software engineering, running within the DeLong Agent SDK.`
+const AGENT_SDK_PREFIX = `You are a DeLong agent, built on the DeLong Agent SDK.`
 
 const CLI_SYSPROMPT_PREFIX_VALUES = [
   DEFAULT_PREFIX,
