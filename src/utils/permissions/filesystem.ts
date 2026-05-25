@@ -64,7 +64,7 @@ export const DANGEROUS_FILES = [
   '.profile',
   '.ripgreprc',
   '.mcp.json',
-  '.claude.json',
+  '.dl.json',
 ] as const
 
 /**
@@ -81,7 +81,7 @@ export const DANGEROUS_DIRECTORIES = [
 /**
  * Normalizes a path for case-insensitive comparison.
  * This prevents bypassing security checks using mixed-case paths on case-insensitive
- * filesystems (macOS/Windows) like `.claude/Settings.locaL.json`.
+ * filesystems (macOS/Windows) like `.dl/Settings.locaL.json`.
  *
  * We always normalize to lowercase regardless of platform for consistent security.
  * @param path The path to normalize
@@ -92,7 +92,7 @@ export function normalizeCaseForComparison(path: string): string {
 }
 
 /**
- * If filePath is inside a skills directory (project: .claude/skills/{name}/, user: ~/.dl/skills/{name}/),
+ * If filePath is inside a skills directory (project: .dl/skills/{name}/, user: ~/.dl/skills/{name}/),
  * return the skill name and a session-allow pattern scoped to just that skill.
  * Used to offer a narrower "allow edits to this skill only" option in the
  * permission dialog and SDK suggestions, so iterating on one skill doesn't
@@ -107,7 +107,7 @@ export function getClaudeSkillScope(
   const bases = [
     {
       dir: expandPath(join(getOriginalCwd(), '.claude', 'skills')),
-      prefix: '/.claude/skills/',
+      prefix: '/.dl/skills/',
     },
     {
       dir: expandPath(join(getClaudeConfigHomeDir(), 'skills')),
@@ -145,7 +145,7 @@ export function getClaudeSkillScope(
         // Reject glob metacharacters. skillName is interpolated into a
         // gitignore pattern consumed by ignore().add() in matchingRuleForInput
         // at step 1.6. A directory literally named '*' (valid on POSIX) would
-        // produce '/.claude/skills/*/**' which matches ALL skills. Return null
+        // produce '/.dl/skills/*/**' which matches ALL skills. Return null
         // to fall through to generateSuggestions() instead.
         if (/[*?[\]]/.test(skillName)) return null
         return { skillName, pattern: prefix + skillName + '/**' }
@@ -211,7 +211,7 @@ export function isClaudeSettingsPath(filePath: string): boolean {
     normalizedPath.endsWith(`${sep}.claude${sep}settings.json`) ||
     normalizedPath.endsWith(`${sep}.claude${sep}settings.local.json`)
   ) {
-    // Include .claude/settings.json even for other projects
+    // Include .dl/settings.json even for other projects
     return true
   }
   // Check for current project's settings files (including managed settings and CLI args)
@@ -227,7 +227,7 @@ function isClaudeConfigFilePath(filePath: string): boolean {
     return true
   }
 
-  // Check if file is within .claude/commands or .claude/agents directories
+  // Check if file is within .dl/commands or .dl/agents directories
   // using proper path segment validation (not string matching with includes())
   // pathInWorkingPath now handles case-insensitive comparison to prevent bypasses
   const commandsDir = join(getOriginalCwd(), '.claude', 'commands')
@@ -326,11 +326,11 @@ export function getClaudeTempDirName(): string {
  * resolution, paths like /tmp/claude-{uid}/... wouldn't match /private/tmp/claude-{uid}/...
  */
 // Memoized: called per-tool from permission checks (yoloClassifier, sandbox-adapter)
-// and per-turn from BashTool prompt. Inputs (CLAUDE_CODE_TMPDIR env + platform) are
+// and per-turn from BashTool prompt. Inputs (DL_CODE_TMPDIR env + platform) are
 // fixed at startup, and the realpath of the system tmp dir does not change mid-session.
 export const getClaudeTempDir = memoize(function getClaudeTempDir(): string {
   const baseTmpDir =
-    process.env.CLAUDE_CODE_TMPDIR ||
+    process.env.DL_CODE_TMPDIR ||
     (getPlatform() === 'windows' ? tmpdir() : '/tmp')
 
   // Resolve symlinks in the base temp directory (e.g., /tmp -> /private/tmp on macOS)
@@ -453,7 +453,7 @@ function isDangerousFilePathToAutoEdit(path: string): boolean {
         continue
       }
 
-      // Special case: .claude/worktrees/ is a structural path (where Claude stores
+      // Special case: .dl/worktrees/ is a structural path (where Claude stores
       // git worktrees), not a user-created dangerous directory. Skip the .claude
       // segment when it's followed by 'worktrees'. Any nested .claude directories
       // within the worktree (not followed by 'worktrees') are still blocked.
@@ -607,7 +607,7 @@ function hasSuspiciousWindowsPathPattern(path: string): boolean {
  *
  * This function performs comprehensive safety checks including:
  * - Suspicious Windows path patterns (NTFS streams, 8.3 names, long path prefixes, etc.)
- * - Claude config files (.claude/settings.json, .claude/commands/, .claude/agents/)
+ * - Claude config files (.dl/settings.json, .dl/commands/, .dl/agents/)
  * - MCP CLI state files (managed internally by Claude Code)
  * - Dangerous files (.bashrc, .gitconfig, .git/, .vscode/, .idea/, etc.)
  *
@@ -721,7 +721,7 @@ export function pathInWorkingPath(path: string, workingPath: string): boolean {
     .replace(/^\/private\/tmp(\/|$)/, '/tmp$1')
 
   // Normalize case for case-insensitive comparison to prevent bypassing security
-  // checks on case-insensitive filesystems (macOS/Windows) like .claude/CoMmAnDs
+  // checks on case-insensitive filesystems (macOS/Windows) like .dl/CoMmAnDs
   const caseNormalizedPath = normalizeCaseForComparison(normalizedPath)
   const caseNormalizedWorkingPath = normalizeCaseForComparison(
     normalizedWorkingPath,
@@ -897,7 +897,7 @@ function patternWithRoot(
       root: homedir().normalize('NFC'),
     }
   } else if (pattern.startsWith(DIR_SEP)) {
-    // Patterns starting with / resolve relative to the directory where settings are stored (without .claude/)
+    // Patterns starting with / resolve relative to the directory where settings are stored (without .dl/)
     return {
       relativePattern: pattern,
       root: rootPathForSource(source),
@@ -1249,10 +1249,10 @@ export function checkWritePermissionForTool<Input extends AnyObject>(
     return internalEditResult
   }
 
-  // 1.6. Check for .claude/** allow rules BEFORE safety checks
-  // This allows session-level permissions to bypass the safety blocks for .claude/
+  // 1.6. Check for .dl/** allow rules BEFORE safety checks
+  // This allows session-level permissions to bypass the safety blocks for .dl/
   // We only allow this for session-level rules to prevent users from accidentally
-  // permanently granting broad access to their .claude/ folder.
+  // permanently granting broad access to their .dl/ folder.
   //
   // matchingRuleForInput returns the first match across all sources. If the user
   // also has a broader Edit(.claude) rule in userSettings (e.g. from sandbox
@@ -1271,9 +1271,9 @@ export function checkWritePermissionForTool<Input extends AnyObject>(
     'allow',
   )
   if (claudeFolderAllowRule) {
-    // Check if this rule is scoped under .claude/ (project or global).
-    // Accepts both the broad patterns ('/.claude/**', '~/.dl/**') and
-    // narrowed ones like '/.claude/skills/my-skill/**' so users can grant
+    // Check if this rule is scoped under .dl/ (project or global).
+    // Accepts both the broad patterns ('/.dl/**', '~/.dl/**') and
+    // narrowed ones like '/.dl/skills/my-skill/**' so users can grant
     // session access to a single skill without also exposing settings.json
     // or hooks/. The rule already matched the path via matchingRuleForInput;
     // this is an additional scope check. Reject '..' to prevent a rule like
@@ -1304,9 +1304,9 @@ export function checkWritePermissionForTool<Input extends AnyObject>(
   // permission to edit protected files
   const safetyCheck = checkPathSafetyForAutoEdit(path, pathsToCheck)
   if (!safetyCheck.safe) {
-    // SDK suggestion: if under .claude/skills/{name}/ or ~/.dl/skills/{name}/, emit the narrowed
+    // SDK suggestion: if under .dl/skills/{name}/ or ~/.dl/skills/{name}/, emit the narrowed
     // session-scoped addRules that step 1.6 will honor on the next call.
-    // Everything else (.claude/settings.json, ~/.dl/settings.json, .git/, .vscode/, .idea/) falls
+    // Everything else (.dl/settings.json, ~/.dl/settings.json, .git/, .vscode/, .idea/) falls
     // back to generateSuggestions — its setMode suggestion doesn't bypass
     // this check, but preserving it avoids a surprising empty array.
     const skillScope = getClaudeSkillScope(path)
@@ -1580,10 +1580,10 @@ export function checkEditableInternalPath(
     }
   }
 
-  // .claude/launch.json — desktop preview config (dev server command + port).
+  // .dl/launch.json — desktop preview config (dev server command + port).
   // The desktop's preview_start MCP tool instructs Claude to create/update
   // this file as part of the preview workflow. Without this carve-out the
-  // .claude/ DANGEROUS_DIRECTORIES check prompts for it, which in SDK mode
+  // .dl/ DANGEROUS_DIRECTORIES check prompts for it, which in SDK mode
   // cascades: user clicks "Always allow" → setMode:acceptEdits suggestion
   // applied → silent downgrade from auto mode. Matches the project-level
   // .dl/ only (not ~/.dl/) since launch.json is per-project.

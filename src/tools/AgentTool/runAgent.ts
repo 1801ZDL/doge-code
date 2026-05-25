@@ -918,7 +918,7 @@ async function getAgentSystemPrompt(
     const prompts = [agentPrompt]
 
     // In coordinator mode, append skill and communication guidance to all agents
-    if (isEnvTruthy(process.env.CLAUDE_CODE_COORDINATOR_MODE)) {
+    if (isEnvTruthy(process.env.DL_CODE_COORDINATOR_MODE)) {
       prompts.push(`
 
 ### Skills

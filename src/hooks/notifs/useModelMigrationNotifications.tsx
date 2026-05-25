@@ -26,7 +26,7 @@ c => {
   if (!recent(ts)) return;
   return {
     key: 'opus-pro-update',
-    text: isLegacyRemap ? 'Model updated to latest Opus · Set CLAUDE_CODE_DISABLE_LEGACY_MODEL_REMAP=1 to opt out' : 'Model updated to latest Opus',
+    text: isLegacyRemap ? 'Model updated to latest Opus · Set DL_CODE_DISABLE_LEGACY_MODEL_REMAP=1 to opt out' : 'Model updated to latest Opus',
     color: 'suggestion',
     priority: 'high',
     timeoutMs: isLegacyRemap ? 8000 : 3000

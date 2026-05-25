@@ -244,9 +244,9 @@ export function convertToSandboxRuntimeConfig(
     denyWrite.push(resolve(cwd, '.claude', 'settings.local.json'))
   }
 
-  // Block writes to .claude/skills in both original and current working directories.
-  // The sandbox-runtime's getDangerousDirectories() protects .claude/commands and
-  // .claude/agents but not .claude/skills. Skills have the same privilege level
+  // Block writes to .dl/skills in both original and current working directories.
+  // The sandbox-runtime's getDangerousDirectories() protects .dl/commands and
+  // .dl/agents but not .dl/skills. Skills have the same privilege level
   // (auto-discovered, auto-loaded, full Claude capabilities) so they need the
   // same OS-level sandbox protection.
   denyWrite.push(resolve(originalCwd, '.claude', 'skills'))

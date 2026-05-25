@@ -68,12 +68,12 @@ The codebase appears to be entirely English-based for all user-facing and debug 
 ### Environment Variables Controlling Debug Output
 | Variable | Effect | Lines in `src/utils/debug.ts` |
 |----------|--------|-------------------------------|
-| `CLAUDE_CODE_DEBUG_LOG_LEVEL` | Sets minimum log level | 34-40 |
+| `DL_CODE_DEBUG_LOG_LEVEL` | Sets minimum log level | 34-40 |
 | `DEBUG` | Enables debug mode | 47 |
 | `DEBUG_SDK` | Enables debug mode | 48 |
 | `--debug` / `-d` | Enables debug mode | 49-50 |
 | `--debug-to-stderr` / `-d2e` | Enables debug mode + writes to stderr | 85-88 |
-| `CLAUDE_CODE_DEBUG_LOGS_DIR` | Overrides debug log directory | 233 |
+| `DL_CODE_DEBUG_LOGS_DIR` | Overrides debug log directory | 233 |
 
 ---
 

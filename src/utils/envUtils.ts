@@ -2,15 +2,15 @@ import memoize from 'lodash-es/memoize.js'
 import { homedir } from 'os'
 import { join } from 'path'
 
-// Memoized: 150+ callers, many on hot paths. Keyed off CLAUDE_CONFIG_DIR so
+// Memoized: 150+ callers, many on hot paths. Keyed off DL_CONFIG_DIR so
 // tests that change the env var get a fresh value without explicit cache.clear.
 export const getClaudeConfigHomeDir = memoize(
   (): string => {
     return (
-      process.env.CLAUDE_CONFIG_DIR ?? join(homedir(), '.dl')
+      process.env.DL_CONFIG_DIR ?? join(homedir(), '.dl')
     ).normalize('NFC')
   },
-  () => process.env.CLAUDE_CONFIG_DIR,
+  () => process.env.DL_CONFIG_DIR,
 )
 
 export function getTeamsDir(): string {
@@ -47,19 +47,19 @@ export function isEnvDefinedFalsy(
 }
 
 /**
- * --bare / CLAUDE_CODE_SIMPLE — skip hooks, LSP, plugin sync, skill dir-walk,
+ * --bare / DL_CODE_SIMPLE — skip hooks, LSP, plugin sync, skill dir-walk,
  * attribution, background prefetches, and ALL keychain/credential reads.
  * Auth is strictly DL_API_KEY env or apiKeyHelper from --settings.
  * Explicit CLI flags (--plugin-dir, --add-dir, --mcp-config) still honored.
  * ~30 gates across the codebase.
  *
  * Checks argv directly (in addition to the env var) because several gates
- * run before main.tsx's action handler sets CLAUDE_CODE_SIMPLE=1 from --bare
+ * run before main.tsx's action handler sets DL_CODE_SIMPLE=1 from --bare
  * — notably startKeychainPrefetch() at main.tsx top-level.
  */
 export function isBareMode(): boolean {
   return (
-    isEnvTruthy(process.env.CLAUDE_CODE_SIMPLE) ||
+    isEnvTruthy(process.env.DL_CODE_SIMPLE) ||
     process.argv.includes('--bare')
   )
 }

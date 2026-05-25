@@ -270,7 +270,7 @@ function ModeIndicator({
   const hasSelection = useHasSelection();
   const selGetState = useSelection().getState;
   const hasNextTick = nextTickAt !== null;
-  const isCoordinator = isEnvTruthy(process.env.CLAUDE_CODE_COORDINATOR_MODE);
+  const isCoordinator = isEnvTruthy(process.env.DL_CODE_COORDINATOR_MODE);
   const runningTaskCount = useMemo(() => count(Object.values(tasks), t => isBackgroundTask(t) && !("external" === 'ant' && isPanelAgentTask(t))), [tasks]);
   const tasksV2 = useTasksV2();
   const hasTaskItems = tasksV2 !== undefined && tasksV2.length > 0;

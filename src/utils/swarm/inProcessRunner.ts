@@ -157,7 +157,7 @@ function createInProcessCanUseTool(
     // In coordinator mode, auto-allow all tools to avoid permission deadlock.
     // Workers are spawned by Commander and run autonomously - Commander doesn't
     // poll mailbox to respond to permission requests, so we skip permission checks.
-    if (isEnvTruthy(process.env.CLAUDE_CODE_COORDINATOR_MODE)) {
+    if (isEnvTruthy(process.env.DL_CODE_COORDINATOR_MODE)) {
       logForDebugging(`[createInProcessCanUseTool] Coordinator mode: auto-allowing ${tool.name}`)
       return { behavior: 'allow' }
     }

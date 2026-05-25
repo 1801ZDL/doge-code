@@ -7,15 +7,15 @@ import { saveMode } from '../../utils/sessionStorage.js'
 // This bypasses the COORDINATOR_MODE feature gate, allowing all users to use
 // the /coordinator command
 function isCoordinatorMode(): boolean {
-  return isEnvTruthy(process.env.CLAUDE_CODE_COORDINATOR_MODE)
+  return isEnvTruthy(process.env.DL_CODE_COORDINATOR_MODE)
 }
 
 function setCoordinatorMode(enable: boolean): void {
   if (enable) {
-    process.env.CLAUDE_CODE_COORDINATOR_MODE = '1'
+    process.env.DL_CODE_COORDINATOR_MODE = '1'
     saveMode('coordinator')
   } else {
-    delete process.env.CLAUDE_CODE_COORDINATOR_MODE
+    delete process.env.DL_CODE_COORDINATOR_MODE
     saveMode('normal')
   }
 }

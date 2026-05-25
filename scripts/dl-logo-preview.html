@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>DL Logo Preview</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0a;
+    color: #e0e0e0;
+    font-family: 'Courier New', 'Noto Sans Mono CJK SC', monospace;
+    padding: 40px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  .card {
+    background: #141414;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .card.selected {
+    border: 2px solid #ff6b35;
+    box-shadow: 0 0 20px rgba(255,107,53,0.3);
+  }
+  .card h3 {
+    font-size: 13px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+  pre {
+    font-size: 24px;
+    line-height: 1.1;
+    color: #ff6b35;
+    background: #0d0d0d;
+    padding: 16px 20px;
+    border-radius: 6px;
+    white-space: pre;
+    letter-spacing: 2px;
+  }
+  .card button {
+    background: #ff6b35;
+    color: #0a0a0a;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 12px;
+  }
+  .card button:hover { background: #ff8559; }
+  .label { font-size: 11px; color: #666; margin-top: 2px; }
+  .toolbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    background: #141414;
+    border-bottom: 1px solid #2a2a2a;
+    padding: 12px 24px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    z-index: 10;
+  }
+  .toolbar span { color: #888; font-size: 13px; }
+  .toolbar input[type=range] { width: 120px; }
+  body { padding-top: 70px; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <span>Font size:</span>
+  <input type="range" id="fontSize" min="16" max="48" value="24" oninput="document.querySelectorAll('pre').forEach(p=>p.style.fontSize=this.value+'px')">
+  <span id="sizeLabel">24px</span>
+  <span style="margin-left:20px">Color:</span>
+  <input type="color" id="color" value="#ff6b35" oninput="document.querySelectorAll('pre').forEach(p=>p.style.color=this.value)">
+  <span style="margin-left:20px">BG:</span>
+  <input type="color" id="bg" value="#0d0d0d" oninput="document.querySelectorAll('pre').forEach(p=>p.style.background=this.value)">
+</div>
+
+<div id="grid"></div>
+
+<script>
+const DESIGNS = [
+  // ── 3-row designs (original width ~11) ──
+  {
+    name: 'Original (current)',
+    tag: '3-row',
+    rows: [
+      ' ▘████▝   █',
+      '█    █    █',
+      ' ▖████▗ ███',
+    ]
+  },
+  {
+    name: 'Clean Curved',
+    tag: '3-row',
+    rows: [
+      ' ▗████▖   █',
+      '▐      ▌  █',
+      ' ▝████▘  ███',
+    ]
+  },
+  {
+    name: 'Half-Block Flat',
+    tag: '3-row',
+    rows: [
+      ' ▄████▄   █',
+      '█      █  █',
+      ' ▀████▀  ███',
+    ]
+  },
+  {
+    name: 'Shadow D',
+    tag: '3-row',
+    rows: [
+      ' ▄████▗  ▐▌',
+      '█     █  ▐▌',
+      ' ▝████▘  ███',
+    ]
+  },
+  // ── 5-row designs (taller, more detail) ──
+  {
+    name: 'Tall Curved',
+    tag: '5-row',
+    rows: [
+      '  ▗████▖   █',
+      ' ▐      ▌  █',
+      ' ▐      ▌  █',
+      ' ▐      ▌  █',
+      '  ▝████▘  ███',
+    ]
+  },
+  {
+    name: 'Tall Rounded D',
+    tag: '5-row',
+    rows: [
+      '  ▄████▄   █▀',
+      ' █      █  █ ',
+      ' █      █  █ ',
+      ' █      █  █▄',
+      '  ▀████▀  ███',
+    ]
+  },
+  {
+    name: 'Bold Pillar D',
+    tag: '5-row',
+    rows: [
+      '  ▗████▖  ▐▌',
+      ' ▐      ▌ ▐▌',
+      ' ▐  ▄▄  ▌ ▐▌',
+      ' ▐  ▀▀  ▌ ▐▌',
+      '  ▝████▘ ███',
+    ]
+  },
+  {
+    name: 'Geometric D',
+    tag: '5-row',
+    rows: [
+      '  ▗████▖  █▀',
+      ' ▐      ▌ █▄',
+      ' ▐  ▗▖  ▌ █▀',
+      ' ▐  ▝▘  ▌ █▄',
+      '  ▝████▘ ███',
+    ]
+  },
+  // ── 7-row designs (big & bold) ──
+  {
+    name: 'Grand Curved',
+    tag: '7-row',
+    rows: [
+      '   ▄████▄    █',
+      '  █▘    ▝█   █',
+      ' █        █  █',
+      ' █        █  █',
+      ' █        █  █',
+      '  █▖    ▗█   █',
+      '   ▀████▀   ███',
+    ]
+  },
+  {
+    name: 'Grand Half-Block',
+    tag: '7-row',
+    rows: [
+      '   ▗█████▖   █',
+      '  ▐       ▌  █',
+      ' ▐         ▌ █',
+      ' ▐         ▌ █',
+      ' ▐         ▌ █',
+      '  ▐       ▌  █',
+      '   ▝█████▘  ███',
+    ]
+  },
+  {
+    name: 'Mega Bold',
+    tag: '7-row',
+    rows: [
+      '   ▄█████▄   ██',
+      '  █       █  ██',
+      ' █         █ ██',
+      ' █         █ ██',
+      ' █         █ ██',
+      '  █       █  ██',
+      '   ▀█████▀  ████',
+    ]
+  },
+  // ── 5-row solid L variants ──
+  {
+    name: 'Thick L Serif',
+    tag: '5-row',
+    rows: [
+      '  ▗████▖  ██',
+      ' ▐      ▌ ██',
+      ' ▐      ▌ ██',
+      ' ▐      ▌ ██',
+      '  ▝████▘ ████',
+    ]
+  },
+  {
+    name: 'Modern DL',
+    tag: '5-row',
+    rows: [
+      '  ▗████▖  ▐▌',
+      ' ▐      ▌ ▐▌',
+      ' ▐      ▌ ▐▌',
+      ' ▐      ▌ ▐▌',
+      '  ▝████▘ ███',
+    ]
+  },
+  {
+    name: '3D Extrusion',
+    tag: '5-row',
+    rows: [
+      '  ▄████▄  █▀',
+      ' █      █ █▄',
+      ' █  ▄▄  █ █▀',
+      ' █  ▀▀  █ █▄',
+      '  ▀████▀ ███',
+    ]
+  },
+  // ── Alternative styles ──
+  {
+    name: 'Outline D',
+    tag: '5-row',
+    rows: [
+      '  ╭────╮  ┃',
+      '  │    │  ┃',
+      '  │    │  ┃',
+      '  │    │  ┃',
+      '  ╰────╯ ┗━┛',
+    ]
+  },
+  {
+    name: 'Double Stroke',
+    tag: '5-row',
+    rows: [
+      '  ▗████▖  ╽',
+      ' ▐      ▌ ╽',
+      ' ▐      ▌ ╽',
+      ' ▐      ▌ ╽',
+      '  ▝████▘ ╘═╛',
+    ]
+  },
+  {
+    name: 'Filled Gradient',
+    tag: '5-row',
+    rows: [
+      '  ▓████▓  ▐▌',
+      ' █      █ ▐▌',
+      ' █ ▓▓▓▓ █ ▐▌',
+      ' █ ░░░░ █ ▐▌',
+      '  ▒████▒ ███',
+    ]
+  },
+];
+
+function render() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  DESIGNS.forEach((d, i) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.id = 'card' + i;
+
+    const h3 = document.createElement('h3');
+    h3.textContent = d.name;
+    card.appendChild(h3);
+
+    const pre = document.createElement('pre');
+    pre.textContent = d.rows.join('\n');
+    card.appendChild(pre);
+
+    const label = document.createElement('div');
+    label.className = 'label';
+    label.textContent = `${d.rows[0].length}×${d.rows.length}  ` + d.tag;
+    card.appendChild(label);
+
+    const btn = document.createElement('button');
+    btn.textContent = 'Select';
+    btn.onclick = () => {
+      document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      // Output the raw text for easy copying
+      console.clear();
+      console.log('Selected:', d.name);
+      console.log('Width:', d.rows[0].length, 'cols  Height:', d.rows.length, 'rows');
+      console.log('--- COPY BELOW ---');
+      d.rows.forEach(r => console.log(r));
+      // Show as C strings
+      console.log('--- C/JS strings ---');
+      d.rows.forEach(r => console.log(JSON.stringify(r)));
+    };
+    card.appendChild(btn);
+
+    grid.appendChild(card);
+  });
+}
+
+document.getElementById('fontSize').oninput = function() {
+  document.getElementById('sizeLabel').textContent = this.value + 'px';
+};
+
+render();
+</script>
+</body>
+</html>

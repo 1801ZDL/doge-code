@@ -64,8 +64,8 @@ export function mergeAndFilterTools(
 
   // Bypass feature flag check — same as coordinatorMode.ts does.
   // When running unbundled (bun run), feature('COORDINATOR_MODE') is false
-  // even though CLAUDE_CODE_COORDINATOR_MODE may be set.
-  if (isEnvTruthy(process.env.CLAUDE_CODE_COORDINATOR_MODE)) {
+  // even though DL_CODE_COORDINATOR_MODE may be set.
+  if (isEnvTruthy(process.env.DL_CODE_COORDINATOR_MODE)) {
     return applyCoordinatorToolFilter(tools)
   }
 

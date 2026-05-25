@@ -234,7 +234,7 @@ export function resolveAgentTools(
   // This ensures all agents (including those with explicit tool lists) can
   // communicate with the Commander.
   if (
-    isEnvTruthy(process.env.CLAUDE_CODE_COORDINATOR_MODE) &&
+    isEnvTruthy(process.env.DL_CODE_COORDINATOR_MODE) &&
     !sendMessageResolvedFromExplicitList
   ) {
     const sendMessageTool = availableToolMap.get(SEND_MESSAGE_TOOL_NAME)

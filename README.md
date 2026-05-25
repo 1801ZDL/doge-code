@@ -93,21 +93,21 @@
 当前 Fork 已明确把默认用户目录收口到：
 
 - 配置目录：[`~/.dl`](README.md)
-- 全局配置文件：[`~/.dl/.claude.json`](README.md)
+- 全局配置文件：[`~/.dl/.dl.json`](README.md)
 
 这样做的目的，是避免以下问题：
 
 - 原版 [`Claude Code`](README.md) 的登录态污染 [`DeLong Code`](README.md)
 - 原版保存的 endpoint / token / model 配置影响 DeLong 的代理转接逻辑
-- 两边共用 [`.claude.json`](README.md) 或 [`.claude/`](README.md) 导致奇怪的网络、认证、模型或 UI 异常
+- 两边共用 [`.dl.json`](README.md) 或 [`.dl/`](README.md) 导致奇怪的网络、认证、模型或 UI 异常
 
 如果用户以前装过原版 [`Claude Code`](README.md)，再运行 [`DeLong Code`](README.md) 时出现"明明没这么配却读到了旧配置"的现象，通常就是历史数据混用导致的。
 
 建议：
 
-- 原版继续使用它自己的 [`.claude`](README.md) / [`.claude.json`](README.md)
+- 原版继续使用它自己的 [`.claude`](README.md) / [`.dl.json`](README.md)
 - [`DeLong Code`](README.md) 使用 [`.dl`](README.md) 目录
-- 如需手动指定，也可以通过 [`CLAUDE_CONFIG_DIR`](README.md) 为 [`DeLong Code`](README.md) 指向独立目录
+- 如需手动指定，也可以通过 [`DL_CONFIG_DIR`](README.md) 为 [`DeLong Code`](README.md) 指向独立目录
 
 一句话总结：
 
@@ -393,7 +393,7 @@ bun run version
 
 ### 2026-04-15 — 目录重构与 Coordinator 模式启动
 
-- **refactor**: 项目级配置目录统一为 `.claude/`，用户级保留 `.dl/`
+- **refactor**: 项目级配置目录统一为 `.dl/`，用户级保留 `.dl/`
 - **feat**: 新增 `/coordinator` 命令开启 coordinator 多智能体模式
 - **fix**: 移除 feature gate，默认可用 coordinator 模式
 
@@ -419,7 +419,7 @@ bun run version
 - **fix**: WebSearch 修复（需重新 `bun install`）
 - **fix**: Linux 下 `bun link` 后启动脚本被 shell 误识别问题
 - **fix**: `Unable to connect to Anthropic services` 连接问题
-- **refactor**: 所有 `.claude/` 目录重命名为 `.dl/`
+- **refactor**: 所有 `.dl/` 目录重命名为 `.dl/`
 - **refactor**: 进一步切断外发遥测主链
 
 ### 2026-04-01 ~ 04-02 — 项目初始化与 OpenAI 兼容

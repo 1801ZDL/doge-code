@@ -55,7 +55,7 @@ export function getAttributionTexts(): AttributionTexts {
   }
 
   if (getClientType() === 'remote') {
-    const remoteSessionId = process.env.CLAUDE_CODE_REMOTE_SESSION_ID
+    const remoteSessionId = process.env.DL_CODE_REMOTE_SESSION_ID
     if (remoteSessionId) {
       const ingressUrl = process.env.SESSION_INGRESS_URL
       // Skip for local dev - URLs won't persist
@@ -295,7 +295,7 @@ export async function getEnhancedPRAttribution(
   }
 
   if (getClientType() === 'remote') {
-    const remoteSessionId = process.env.CLAUDE_CODE_REMOTE_SESSION_ID
+    const remoteSessionId = process.env.DL_CODE_REMOTE_SESSION_ID
     if (remoteSessionId) {
       const ingressUrl = process.env.SESSION_INGRESS_URL
       // Skip for local dev - URLs won't persist

@@ -279,7 +279,7 @@ type JsonArray = JsonValue[]
 
 /**
  * Assemble the extra body parameters for the API request, based on the
- * CLAUDE_CODE_EXTRA_BODY environment variable if present and on any beta
+ * DL_CODE_EXTRA_BODY environment variable if present and on any beta
  * headers (primarily for Bedrock requests).
  *
  * @param betaHeaders - An array of beta headers to include in the request.
@@ -287,7 +287,7 @@ type JsonArray = JsonValue[]
  */
 export function getExtraBodyParams(betaHeaders?: string[]): JsonObject {
   // Parse user's extra body parameters first
-  const extraBodyStr = process.env.CLAUDE_CODE_EXTRA_BODY
+  const extraBodyStr = process.env.DL_CODE_EXTRA_BODY
   let result: JsonObject = {}
 
   if (extraBodyStr) {
@@ -302,13 +302,13 @@ export function getExtraBodyParams(betaHeaders?: string[]): JsonObject {
         result = { ...(parsed as JsonObject) }
       } else {
         logForDebugging(
-          `CLAUDE_CODE_EXTRA_BODY env var must be a JSON object, but was given ${extraBodyStr}`,
+          `DL_CODE_EXTRA_BODY env var must be a JSON object, but was given ${extraBodyStr}`,
           { level: 'error' },
         )
       }
     } catch (error) {
       logForDebugging(
-        `Error parsing CLAUDE_CODE_EXTRA_BODY: ${errorMessage(error)}`,
+        `Error parsing DL_CODE_EXTRA_BODY: ${errorMessage(error)}`,
         { level: 'error' },
       )
     }
@@ -505,14 +505,14 @@ export function configureTaskBudgetParams(
 export function getAPIMetadata() {
   // https://docs.google.com/document/d/1dURO9ycXXQCBS0V4Vhl4poDBRgkelFc5t2BNPoEgH5Q/edit?tab=t.0#heading=h.5g7nec5b09w5
   let extra: JsonObject = {}
-  const extraStr = process.env.CLAUDE_CODE_EXTRA_METADATA
+  const extraStr = process.env.DL_CODE_EXTRA_METADATA
   if (extraStr) {
     const parsed = safeParseJSON(extraStr, false)
     if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
       extra = parsed as JsonObject
     } else {
       logForDebugging(
-        `CLAUDE_CODE_EXTRA_METADATA env var must be a JSON object, but was given ${extraStr}`,
+        `DL_CODE_EXTRA_METADATA env var must be a JSON object, but was given ${extraStr}`,
         { level: 'error' },
       )
     }
@@ -803,7 +803,7 @@ function shouldDeferLspTool(tool: Tool): boolean {
 function getNonstreamingFallbackTimeoutMs(): number {
   const override = parseInt(process.env.API_TIMEOUT_MS || '', 10)
   if (override) return override
-  return isEnvTruthy(process.env.CLAUDE_CODE_REMOTE) ? 120_000 : 300_000
+  return isEnvTruthy(process.env.DL_CODE_REMOTE) ? 120_000 : 300_000
 }
 
 /**
@@ -1591,7 +1591,7 @@ async function* queryModel(
 
     const hasThinking =
       thinkingConfig.type !== 'disabled' &&
-      !isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_THINKING)
+      !isEnvTruthy(process.env.DL_CODE_DISABLE_THINKING)
     let thinking: BetaMessageStreamParams['thinking'] | undefined = undefined
 
     // IMPORTANT: Do not change the adaptive-vs-budget thinking selection below
@@ -1599,7 +1599,7 @@ async function* queryModel(
     // setting that can greatly affect model quality and bashing.
     if (hasThinking && modelSupportsThinking(options.model)) {
       if (
-        !isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING) &&
+        !isEnvTruthy(process.env.DL_CODE_DISABLE_ADAPTIVE_THINKING) &&
         modelSupportsAdaptiveThinking(options.model)
       ) {
         // For models that support adaptive thinking, always use adaptive
@@ -2403,7 +2403,7 @@ async function* queryModel(
               yield createAssistantAPIErrorMessage({
                 content: `${API_ERROR_MESSAGE_PREFIX}: Claude's response exceeded the ${
                   maxOutputTokens
-                } output token maximum. To configure this behavior, set the CLAUDE_CODE_MAX_OUTPUT_TOKENS environment variable.`,
+                } output token maximum. To configure this behavior, set the DL_CODE_MAX_OUTPUT_TOKENS environment variable.`,
                 apiError: 'max_output_tokens',
                 error: 'max_output_tokens',
               })
@@ -2600,7 +2600,7 @@ async function* queryModel(
       // starts a tool, then the non-streaming retry produces the same tool_use
       // and runs it again. See inc-4258.
       const disableFallback =
-        isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_NONSTREAMING_FALLBACK) ||
+        isEnvTruthy(process.env.DL_CODE_DISABLE_NONSTREAMING_FALLBACK) ||
         getFeatureValue_CACHED_MAY_BE_STALE(
           'tengu_disable_streaming_to_non_streaming_fallback',
           false,
@@ -3537,14 +3537,14 @@ export function getMaxOutputTokensForModel(model: string): number {
   // Requests hitting the cap get one clean retry at 64k (query.ts
   // max_output_tokens_escalate). Math.min keeps models with lower native
   // defaults (e.g. claude-3-opus at 4k) at their native value. Applied
-  // before the env-var override so CLAUDE_CODE_MAX_OUTPUT_TOKENS still wins.
+  // before the env-var override so DL_CODE_MAX_OUTPUT_TOKENS still wins.
   const defaultTokens = isMaxTokensCapEnabled()
     ? Math.min(maxOutputTokens.default, CAPPED_DEFAULT_MAX_TOKENS)
     : maxOutputTokens.default
 
   const result = validateBoundedIntEnvVar(
-    'CLAUDE_CODE_MAX_OUTPUT_TOKENS',
-    process.env.CLAUDE_CODE_MAX_OUTPUT_TOKENS,
+    'DL_CODE_MAX_OUTPUT_TOKENS',
+    process.env.DL_CODE_MAX_OUTPUT_TOKENS,
     defaultTokens,
     maxOutputTokens.upperLimit,
   )

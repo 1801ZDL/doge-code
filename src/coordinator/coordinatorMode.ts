@@ -38,7 +38,7 @@ const INTERNAL_WORKER_TOOLS = new Set([
 export function isCoordinatorMode(): boolean {
   // Simplified: always return true when env var is set.
   // This bypasses the COORDINATOR_MODE feature flag check which may not be enabled.
-  return isEnvTruthy(process.env.CLAUDE_CODE_COORDINATOR_MODE)
+  return isEnvTruthy(process.env.DL_CODE_COORDINATOR_MODE)
 }
 
 /**
@@ -64,9 +64,9 @@ export function matchSessionMode(
 
   // Flip the env var — isCoordinatorMode() reads it live, no caching
   if (sessionIsCoordinator) {
-    process.env.CLAUDE_CODE_COORDINATOR_MODE = '1'
+    process.env.DL_CODE_COORDINATOR_MODE = '1'
   } else {
-    delete process.env.CLAUDE_CODE_COORDINATOR_MODE
+    delete process.env.DL_CODE_COORDINATOR_MODE
   }
 
   logEvent('tengu_coordinator_mode_switched', {
@@ -88,7 +88,7 @@ export function getCoordinatorUserContext(
     return {}
   }
 
-  const workerTools = isEnvTruthy(process.env.CLAUDE_CODE_SIMPLE)
+  const workerTools = isEnvTruthy(process.env.DL_CODE_SIMPLE)
     ? [BASH_TOOL_NAME, FILE_READ_TOOL_NAME, FILE_EDIT_TOOL_NAME]
         .sort()
         .join(', ')
@@ -114,7 +114,7 @@ export function getCoordinatorUserContext(
         .join('\n')
       content += `\n\n**Your Agent Corps (~/.dl/agents) — USE THESE FIRST:**\n${agentList}\n\n**Agent Selection Protocol (MANDATORY):**\n1. **Match task to agent description** — For EVERY subtask, read each agent's \`whenToUse\` description and pick the one whose stated purpose most closely matches the task. Do NOT default to the same agent for all tasks.\n2. **One subtask, one best agent** — Each subtask gets exactly one agent type. If no specialized agent fits, fall back to \`worker\`.\n3. **Explicit selection reasoning** — When spawning, briefly state WHY you chose that agent (e.g., "Using long-text-reader because this is a 5KB IR dump").\n4. **No agent monopolization** — If you have 3 different subtasks and 3 different specialized agents that fit, you MUST use all 3 different agents. Repetition is a failure mode.\n5. **Common scenario mapping:**\n   - Large text / IR dump / log file analysis → agent whose whenToUse mentions "long text" or "large output"\n   - Codebase exploration / multi-file research → agent whose whenToUse mentions "codebase" or "research"\n   - Implementation / editing → agent whose whenToUse mentions "implement" or "edit", else \`worker\`\n   - Verification / testing → agent whose whenToUse mentions "verify" or "test", else \`worker\`
 
-**Agent Persistence:** The agents above are loaded from \`~/.dl/agents/\` (global, survives project moves) and \`.claude/agents/\` (project-local, tied to this directory). If you notice a specialized agent pattern recurring across sessions, tell the user to save it to \`~/.dl/agents/\` via /agents so it persists when switching projects.`
+**Agent Persistence:** The agents above are loaded from \`~/.dl/agents/\` (global, survives project moves) and \`.dl/agents/\` (project-local, tied to this directory). If you notice a specialized agent pattern recurring across sessions, tell the user to save it to \`~/.dl/agents/\` via /agents so it persists when switching projects.`
     }
   }
 
@@ -134,7 +134,7 @@ export function getCoordinatorUserContext(
 export function getCoordinatorSystemPrompt(
   agentDefinitions: AgentDefinitionsResult | undefined,
 ): string {
-  const agentCapabilities = isEnvTruthy(process.env.CLAUDE_CODE_SIMPLE)
+  const agentCapabilities = isEnvTruthy(process.env.DL_CODE_SIMPLE)
     ? 'Agents have access to Bash, Read, and Edit tools, plus MCP tools from configured MCP servers.'
     : 'Agents have access to standard tools, MCP tools from configured MCP servers, and project skills via the Skill tool. Delegate skill invocations (e.g. /commit, /verify) to agents.'
 

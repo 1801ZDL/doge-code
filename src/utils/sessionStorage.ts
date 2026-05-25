@@ -467,7 +467,7 @@ export function getUserType(): string {
 }
 
 function getEntrypoint(): string | undefined {
-  return process.env.CLAUDE_CODE_ENTRYPOINT
+  return process.env.DL_CODE_ENTRYPOINT
 }
 
 export function isCustomTitleEnabled(): boolean {
@@ -522,7 +522,7 @@ export function resetProjectFlushStateForTesting(): void {
 
 /**
  * Reset the entire Project singleton for testing.
- * This ensures tests with different CLAUDE_CONFIG_DIR values
+ * This ensures tests with different DL_CONFIG_DIR values
  * don't share stale sessionFile paths.
  */
 export function resetProjectForTesting(): void {
@@ -1006,7 +1006,7 @@ class Project {
 
   /**
    * True when test env / cleanupPeriodDays=0 / --no-session-persistence /
-   * CLAUDE_CODE_SKIP_PROMPT_HISTORY should suppress all transcript writes.
+   * DL_CODE_SKIP_PROMPT_HISTORY should suppress all transcript writes.
    * Shared guard for appendEntry and materializeSessionFile so both skip
    * consistently. The env var is set by tmuxSocket.ts so Tungsten-spawned
    * test sessions don't pollute the user's --resume list.
@@ -1019,7 +1019,7 @@ class Project {
       (getNodeEnv() === 'test' && !allowTestPersistence) ||
       getSettings_DEPRECATED()?.cleanupPeriodDays === 0 ||
       isSessionPersistenceDisabled() ||
-      isEnvTruthy(process.env.CLAUDE_CODE_SKIP_PROMPT_HISTORY)
+      isEnvTruthy(process.env.DL_CODE_SKIP_PROMPT_HISTORY)
     )
   }
 
@@ -3609,7 +3609,7 @@ export async function loadTranscriptFile(
     let buf: Buffer | null = null
     let metadataLines: string[] | null = null
     let hasPreservedSegment = false
-    if (!isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_PRECOMPACT_SKIP)) {
+    if (!isEnvTruthy(process.env.DL_CODE_DISABLE_PRECOMPACT_SKIP)) {
       const { size } = await stat(filePath)
       if (size > SKIP_PRECOMPACT_THRESHOLD) {
         const scan = await readTranscriptForLoad(filePath, size)
@@ -3641,14 +3641,14 @@ export async function loadTranscriptFile(
     // preservedSegment (those messages keep their pre-compact parentUuid on
     // disk -- applyPreservedSegmentRelinks splices them in-memory AFTER
     // parse, so a pre-parse chain walk would drop them as orphans), and when
-    // CLAUDE_CODE_DISABLE_PRECOMPACT_SKIP is set (that kill switch means
+    // DL_CODE_DISABLE_PRECOMPACT_SKIP is set (that kill switch means
     // "load everything, skip nothing"; this is another skip-before-parse
     // optimization and the scan it depends on for hasPreservedSegment did
     // not run).
     if (
       !opts?.keepAllLeaves &&
       !hasPreservedSegment &&
-      !isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_PRECOMPACT_SKIP) &&
+      !isEnvTruthy(process.env.DL_CODE_DISABLE_PRECOMPACT_SKIP) &&
       buf.length > SKIP_PRECOMPACT_THRESHOLD
     ) {
       buf = walkChainBeforeParse(buf)
@@ -4438,7 +4438,7 @@ export function isLoggableMessage(m: Message): boolean {
   if (m.type === 'attachment' && getUserType() !== 'ant') {
     if (
       m.attachment.type === 'hook_additional_context' &&
-      isEnvTruthy(process.env.CLAUDE_CODE_SAVE_HOOK_ADDITIONAL_CONTEXT)
+      isEnvTruthy(process.env.DL_CODE_SAVE_HOOK_ADDITIONAL_CONTEXT)
     ) {
       return true
     }

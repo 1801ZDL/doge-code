@@ -31,7 +31,7 @@ function withoutSSHTunnelVars(
     ANTHROPIC_BASE_URL: _2,
     DL_API_KEY: _3,
     ANTHROPIC_AUTH_TOKEN: _4,
-    CLAUDE_CODE_OAUTH_TOKEN: _5,
+    DL_CODE_OAUTH_TOKEN: _5,
     ...rest
   } = env
   return rest
@@ -39,7 +39,7 @@ function withoutSSHTunnelVars(
 
 /**
  * When the host owns inference routing (sets
- * CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST in spawn env), strip
+ * DL_CODE_PROVIDER_MANAGED_BY_HOST in spawn env), strip
  * provider-selection / model-default vars from settings-sourced env so a
  * user's ~/.dl/settings.json can't redirect requests away from the
  * host-configured provider.
@@ -48,7 +48,7 @@ function withoutHostManagedProviderVars(
   env: Record<string, string> | undefined,
 ): Record<string, string> {
   if (!env) return {}
-  if (!isEnvTruthy(process.env.CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST)) {
+  if (!isEnvTruthy(process.env.DL_CODE_PROVIDER_MANAGED_BY_HOST)) {
     return env
   }
   const out: Record<string, string> = {}
@@ -127,12 +127,12 @@ export function applySafeConfigEnvironmentVariables(): void {
   // Capture CCD spawn-env keys before any settings.env is applied (once).
   if (ccdSpawnEnvKeys === undefined) {
     ccdSpawnEnvKeys =
-      process.env.CLAUDE_CODE_ENTRYPOINT === 'claude-desktop'
+      process.env.DL_CODE_ENTRYPOINT === 'claude-desktop'
         ? new Set(Object.keys(process.env))
         : null
   }
 
-  // Global config (~/.claude.json) is user-controlled. In CCD mode,
+  // Global config (~/.dl.json) is user-controlled. In CCD mode,
   // filterSettingsEnv strips keys that were in the spawn env snapshot so
   // the desktop host's operational vars (OTEL, etc.) are not overridden.
   Object.assign(process.env, filterSettingsEnv(getGlobalConfig().env))
@@ -152,7 +152,7 @@ export function applySafeConfigEnvironmentVariables(): void {
   }
 
   // Compute remote-managed-settings eligibility now, with userSettings and
-  // flagSettings env applied. Eligibility reads CLAUDE_CODE_USE_BEDROCK,
+  // flagSettings env applied. Eligibility reads DL_CODE_USE_BEDROCK,
   // ANTHROPIC_BASE_URL — both settable via settings.env.
   // getSettingsForSource('policySettings') below consults the remote cache,
   // which guards on this. The two-phase structure makes the ordering
@@ -171,7 +171,7 @@ export function applySafeConfigEnvironmentVariables(): void {
   // in the safe allowlist. Only policySettings values are guaranteed to survive
   // unchanged (it has the highest merge priority in both loops) — except
   // provider-routing vars, which filterSettingsEnv strips from every source
-  // when CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST is set.
+  // when DL_CODE_PROVIDER_MANAGED_BY_HOST is set.
   const settingsEnv = filterSettingsEnv(getSettings_DEPRECATED()?.env)
   for (const [key, value] of Object.entries(settingsEnv)) {
     if (SAFE_ENV_VARS.has(key.toUpperCase())) {
@@ -183,7 +183,7 @@ export function applySafeConfigEnvironmentVariables(): void {
 /**
  * Apply environment variables from settings to process.env.
  * This applies ALL environment variables (except provider-routing vars when
- * CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST is set — see filterSettingsEnv) and
+ * DL_CODE_PROVIDER_MANAGED_BY_HOST is set — see filterSettingsEnv) and
  * should only be called after trust is established. This applies potentially
  * dangerous environment variables such as LD_PRELOAD, PATH, etc.
  */
@@ -233,7 +233,7 @@ function applyPersistedCustomApiEndpointEnv(): void {
   }
 
   if (endpointConfig?.provider) {
-    process.env.CLAUDE_CODE_COMPATIBLE_API_PROVIDER = endpointConfig.provider
+    process.env.DL_CODE_COMPATIBLE_API_PROVIDER = endpointConfig.provider
   }
 
   if (currentModel) {

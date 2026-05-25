@@ -103,7 +103,7 @@ export function bootstrapTelemetry() {
   delete process.env.OTEL_EXPORTER_OTLP_HEADERS
   delete process.env.BETA_TRACING_ENDPOINT
   delete process.env.ENABLE_BETA_TRACING_DETAILED
-  delete process.env.CLAUDE_CODE_ENABLE_TELEMETRY
+  delete process.env.DL_CODE_ENABLE_TELEMETRY
 }
 
 // Per OTEL spec, "none" means "no automatically configured exporter for this signal".
@@ -429,7 +429,7 @@ export async function initializeTelemetry() {
   diag.setLogger(new ClaudeCodeDiagLogger(), DiagLogLevel.ERROR)
 
   // Initialize Perfetto tracing (independent of OTEL)
-  // Enable via CLAUDE_CODE_PERFETTO_TRACE=1 or CLAUDE_CODE_PERFETTO_TRACE=<path>
+  // Enable via DL_CODE_PERFETTO_TRACE=1 or DL_CODE_PERFETTO_TRACE=<path>
   initializePerfettoTracing()
 
   const readers = []
@@ -437,7 +437,7 @@ export async function initializeTelemetry() {
   // Add customer exporters (if enabled)
   const telemetryEnabled = isTelemetryEnabled()
   logForDebugging(
-    `[3P telemetry] isTelemetryEnabled=${telemetryEnabled} (CLAUDE_CODE_ENABLE_TELEMETRY=${process.env.CLAUDE_CODE_ENABLE_TELEMETRY})`,
+    `[3P telemetry] isTelemetryEnabled=${telemetryEnabled} (DL_CODE_ENABLE_TELEMETRY=${process.env.DL_CODE_ENABLE_TELEMETRY})`,
   )
   if (telemetryEnabled) {
     readers.push(...(await getOtlpReaders()))
@@ -506,7 +506,7 @@ export async function initializeTelemetry() {
     // Register shutdown for beta tracing
     const shutdownTelemetry = async () => {
       const timeoutMs = parseInt(
-        process.env.CLAUDE_CODE_OTEL_SHUTDOWN_TIMEOUT_MS || '2000',
+        process.env.DL_CODE_OTEL_SHUTDOWN_TIMEOUT_MS || '2000',
       )
       try {
         endInteractionSpan()
@@ -633,7 +633,7 @@ export async function initializeTelemetry() {
   // Shutdown metrics and logs on exit (flushes and closes exporters)
   const shutdownTelemetry = async () => {
     const timeoutMs = parseInt(
-      process.env.CLAUDE_CODE_OTEL_SHUTDOWN_TIMEOUT_MS || '2000',
+      process.env.DL_CODE_OTEL_SHUTDOWN_TIMEOUT_MS || '2000',
     )
 
     try {
@@ -661,9 +661,9 @@ export async function initializeTelemetry() {
 OpenTelemetry telemetry flush timed out after ${timeoutMs}ms
 
 To resolve this issue, you can:
-1. Increase the timeout by setting CLAUDE_CODE_OTEL_SHUTDOWN_TIMEOUT_MS env var (e.g., 5000 for 5 seconds)
+1. Increase the timeout by setting DL_CODE_OTEL_SHUTDOWN_TIMEOUT_MS env var (e.g., 5000 for 5 seconds)
 2. Check if your OpenTelemetry backend is experiencing scalability issues
-3. Disable OpenTelemetry by unsetting CLAUDE_CODE_ENABLE_TELEMETRY env var
+3. Disable OpenTelemetry by unsetting DL_CODE_ENABLE_TELEMETRY env var
 
 Current timeout: ${timeoutMs}ms
 `,

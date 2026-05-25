@@ -1,5 +1,5 @@
 export const AGENT_PATHS = {
-  project: '.claude/agents',
+  project: '.dl/agents',
   user: '~/.dl/agents',
 } as const
 

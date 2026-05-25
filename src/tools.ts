@@ -87,10 +87,10 @@ import { TaskListTool } from './tools/TaskListTool/TaskListTool.js'
 import uniqBy from 'lodash-es/uniqBy.js'
 import { isToolSearchEnabledOptimistic } from './utils/toolSearch.js'
 import { isTodoV2Enabled } from './utils/tasks.js'
-// Dead code elimination: conditional import for CLAUDE_CODE_VERIFY_PLAN
+// Dead code elimination: conditional import for DL_CODE_VERIFY_PLAN
 /* eslint-disable custom-rules/no-process-env-top-level, @typescript-eslint/no-require-imports */
 const VerifyPlanExecutionTool =
-  process.env.CLAUDE_CODE_VERIFY_PLAN === 'true'
+  process.env.DL_CODE_VERIFY_PLAN === 'true'
     ? require('./tools/VerifyPlanExecutionTool/VerifyPlanExecutionTool.js')
         .VerifyPlanExecutionTool
     : null
@@ -118,7 +118,7 @@ const TerminalCaptureTool = feature('TERMINAL_PANEL')
 const WebBrowserTool = feature('WEB_BROWSER_TOOL')
   ? require('./tools/WebBrowserTool/WebBrowserTool.js').WebBrowserTool
   : null
-// Note: coordinatorModeModule import removed — we check CLAUDE_CODE_COORDINATOR_MODE
+// Note: coordinatorModeModule import removed — we check DL_CODE_COORDINATOR_MODE
 // directly below to bypass the compile-time feature flag which is false when
 // running unbundled (bun run).
 const SnipTool = feature('HISTORY_SNIP')
@@ -271,13 +271,13 @@ export function filterToolsByDenyRules<
 
 export const getTools = (permissionContext: ToolPermissionContext): Tools => {
   // Simple mode: only Bash, Read, and Edit tools
-  if (isEnvTruthy(process.env.CLAUDE_CODE_SIMPLE)) {
+  if (isEnvTruthy(process.env.DL_CODE_SIMPLE)) {
     // --bare + REPL mode: REPL wraps Bash/Read/Edit/etc inside the VM, so
     // return REPL instead of the raw primitives. Matches the non-bare path
     // below which also hides REPL_ONLY_TOOLS when REPL is enabled.
     if (isReplModeEnabled() && REPLTool) {
       const replSimple: Tool[] = [REPLTool]
-      if (isEnvTruthy(process.env.CLAUDE_CODE_COORDINATOR_MODE)) {
+      if (isEnvTruthy(process.env.DL_CODE_COORDINATOR_MODE)) {
         replSimple.push(TaskStopTool, getSendMessageTool())
       }
       return filterToolsByDenyRules(replSimple, permissionContext)
@@ -286,7 +286,7 @@ export const getTools = (permissionContext: ToolPermissionContext): Tools => {
     // When coordinator mode is also active, include AgentTool and TaskStopTool
     // so the coordinator gets Task+TaskStop (via useMergedTools filtering) and
     // workers get Bash/Read/Edit (via filterToolsForAgent filtering).
-    if (isEnvTruthy(process.env.CLAUDE_CODE_COORDINATOR_MODE)) {
+    if (isEnvTruthy(process.env.DL_CODE_COORDINATOR_MODE)) {
       simpleTools.push(AgentTool, TaskStopTool, getSendMessageTool())
     }
     return filterToolsByDenyRules(simpleTools, permissionContext)

@@ -51,10 +51,10 @@ export function shouldEnableClaudeInChrome(chromeFlag?: boolean): boolean {
   }
 
   // Check environment variables
-  if (isEnvTruthy(process.env.CLAUDE_CODE_ENABLE_CFC)) {
+  if (isEnvTruthy(process.env.DL_CODE_ENABLE_CFC)) {
     return true
   }
-  if (isEnvDefinedFalsy(process.env.CLAUDE_CODE_ENABLE_CFC)) {
+  if (isEnvDefinedFalsy(process.env.DL_CODE_ENABLE_CFC)) {
     return false
   }
 
@@ -355,7 +355,7 @@ exec ${command}
  *
  * Only positive detections are persisted. A negative result from the
  * filesystem scan is not cached, because it may come from a machine that
- * shares ~/.claude.json but has no local Chrome (e.g. a remote dev
+ * shares ~/.dl.json but has no local Chrome (e.g. a remote dev
  * environment using the bridge), and caching it would permanently poison
  * auto-enable for every session on every machine that reads that config.
  */

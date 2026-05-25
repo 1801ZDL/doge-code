@@ -25,12 +25,12 @@ export const getGlobalClaudeFile = memoize((): string => {
     return join(getClaudeConfigHomeDir(), '.config.json')
   }
 
-  if (!process.env.CLAUDE_CONFIG_DIR) {
+  if (!process.env.DL_CONFIG_DIR) {
     return getDlGlobalConfigFile()
   }
 
   const filename = `.claude${fileSuffixForOauthConfig()}.json`
-  return join(process.env.CLAUDE_CONFIG_DIR || homedir(), filename)
+  return join(process.env.DL_CONFIG_DIR || homedir(), filename)
 })
 
 const hasInternetAccess = memoize(async (): Promise<boolean> => {
@@ -342,12 +342,12 @@ export const env = {
 
 /**
  * Returns the host platform for analytics reporting.
- * If CLAUDE_CODE_HOST_PLATFORM is set to a valid platform value, that overrides
+ * If DL_CODE_HOST_PLATFORM is set to a valid platform value, that overrides
  * the detected platform. This is useful for container/remote environments where
  * process.platform reports the container OS but the actual host platform differs.
  */
 export function getHostPlatformForAnalytics(): Platform {
-  const override = process.env.CLAUDE_CODE_HOST_PLATFORM
+  const override = process.env.DL_CODE_HOST_PLATFORM
   if (override === 'win32' || override === 'darwin' || override === 'linux') {
     return override
   }

@@ -8,7 +8,7 @@ const MIN_APPROACHES = 2
 const MAX_APPROACHES = 5
 
 const WORKER_INSTRUCTIONS = `Before starting work:
-1. **Verify isolation** — Confirm you are in an isolated git worktree (check that the current directory is NOT the main repo root; the path should contain ".claude/worktrees/"). If you are NOT in a worktree, STOP and report the issue immediately.
+1. **Verify isolation** — Confirm you are in an isolated git worktree (check that the current directory is NOT the main repo root; the path should contain ".dl/worktrees/"). If you are NOT in a worktree, STOP and report the issue immediately.
 2. **Initialize submodules** — If target files are inside a submodule directory that is empty or missing, run "git submodule update --init" (or "git submodule update --init --recursive" if nested submodules exist). Do NOT proceed if submodule initialization fails.
 3. **Verify target files exist** — Before editing any file, confirm it exists in the current worktree. If it does not exist, STOP and report — do not silently create files in unexpected locations or modify files outside the worktree.
 

@@ -23,16 +23,16 @@ function sanitizeAgentTypeForPath(agentType: string): string {
 
 /**
  * Returns the local agent memory directory, which is project-specific and not checked into VCS.
- * When CLAUDE_CODE_REMOTE_MEMORY_DIR is set, persists to the mount with project namespacing.
+ * When DL_CODE_REMOTE_MEMORY_DIR is set, persists to the mount with project namespacing.
  * Otherwise, uses <cwd>/.dl/agent-memory-local/<agentType>/.
  */
 function getLocalAgentMemoryDir(dirName: string): string {
-  if (process.env.CLAUDE_CODE_REMOTE_MEMORY_DIR) {
+  if (process.env.DL_CODE_REMOTE_MEMORY_DIR) {
     const projectRoot = findCanonicalGitRoot(getProjectRoot()) ?? getProjectRoot()
     const sanitizedProjectRoot = sanitizePath(projectRoot)
     return (
       join(
-        process.env.CLAUDE_CODE_REMOTE_MEMORY_DIR,
+        process.env.DL_CODE_REMOTE_MEMORY_DIR,
         'projects',
         sanitizedProjectRoot || 'default-project',
         'agent-memory-local',
@@ -82,12 +82,12 @@ export function isAgentMemoryPath(absolutePath: string): boolean {
     return true
   }
 
-  // Local scope: persisted to mount when CLAUDE_CODE_REMOTE_MEMORY_DIR is set, otherwise cwd-based
-  if (process.env.CLAUDE_CODE_REMOTE_MEMORY_DIR) {
+  // Local scope: persisted to mount when DL_CODE_REMOTE_MEMORY_DIR is set, otherwise cwd-based
+  if (process.env.DL_CODE_REMOTE_MEMORY_DIR) {
     if (
       normalizedPath.includes(sep + 'agent-memory-local' + sep) &&
       normalizedPath.startsWith(
-        join(process.env.CLAUDE_CODE_REMOTE_MEMORY_DIR, 'projects') + sep,
+        join(process.env.DL_CODE_REMOTE_MEMORY_DIR, 'projects') + sep,
       )
     ) {
       return true
@@ -120,7 +120,7 @@ export function getMemoryScopeDisplay(
     case 'user':
       return `User (${join(getMemoryBaseDir(), 'agent-memory')}/)`
     case 'project':
-      return 'Project (.claude/agent-memory/)'
+      return 'Project (.dl/agent-memory/)'
     case 'local':
       return `Local (${getLocalAgentMemoryDir('...')})`
     default:

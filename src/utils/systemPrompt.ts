@@ -61,7 +61,7 @@ export function buildEffectiveSystemPrompt({
   // dependency issues during test module loading.
   // Bypass feature flag — when running unbundled (bun run), feature() returns false.
   if (
-    isEnvTruthy(process.env.CLAUDE_CODE_COORDINATOR_MODE) &&
+    isEnvTruthy(process.env.DL_CODE_COORDINATOR_MODE) &&
     !mainThreadAgentDefinition
   ) {
     // Lazy require to avoid circular dependency at module load time
